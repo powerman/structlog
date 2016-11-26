@@ -428,7 +428,7 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 // Println works like log.Println. Use level INF.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Println(v ...interface{}) {
-	l.log(INF, fmt.Sprintln(v...))
+	l.log(INF, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 }
 
 // Fatal works like log.Fatal. Use level ERR.
@@ -448,7 +448,7 @@ func (l *Logger) Fatalf(format string, v ...interface{}) {
 // Fatalln works like log.Fatalln. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Fatalln(v ...interface{}) {
-	l.log(ERR, fmt.Sprintln(v...))
+	l.log(ERR, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 	os.Exit(1)
 }
 
@@ -471,7 +471,7 @@ func (l *Logger) Panicf(format string, v ...interface{}) {
 // Panicln works like log.Panicln. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Panicln(v ...interface{}) {
-	s := fmt.Sprintln(v...)
+	s := strings.TrimSuffix(fmt.Sprintln(v...), "\n")
 	l.log(ERR, s)
 	panic(s)
 }
@@ -668,7 +668,7 @@ func (l *Logger) getFormat(k string) string {
 	return *l.keyValFormat
 }
 
-// getPackageDepth return current stack depth within caller's package.
+// getPackageDepth returns current stack depth within caller's package.
 func getPackageDepth() int {
 	_, callerFile, _, ok := runtime.Caller(1)
 	callerPkg, _ := path.Split(callerFile)
