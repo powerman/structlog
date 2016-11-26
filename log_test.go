@@ -36,5 +36,6 @@ func (s *TestSuite) TestGetErr(c *C) {
 	c.Check(log.Err("fail", "err", io.EOF), Equals, io.EOF)
 	c.Check(log.Err("fail", "a", 1, "myerr", myerr, "b", 2), Equals, myerr)
 	c.Check(log.Err("fail", "a", 1, "b", 2), DeepEquals, errors.New("fail"))
-	// c.Check(log.Err("fail", io.EOF, myerr), Equals, io.EOF)
+	c.Check(log.Err("fail", io.EOF, myerr), Equals, io.EOF)
+	c.Check(log.Err("fail", io.EOF), Equals, io.EOF)
 }

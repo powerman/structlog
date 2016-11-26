@@ -258,7 +258,7 @@ func (l *Logger) SetDefaultKeyvals(keyvals ...interface{}) *Logger {
 	for i := 0; i < len(keyvals); i += 2 {
 		k, ok := keyvals[i].(string)
 		if !ok {
-			l.New().AddCallDepth(getPackageDepth()).Err("key is not string", "key", keyvals[i])
+			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
 		l.Lock()
@@ -531,7 +531,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	for i := 0; i < len(keyvals); i += 2 {
 		k, ok := keyvals[i].(string)
 		if !ok {
-			l.New().AddCallDepth(getPackageDepth()).Err("key is not string", "key", keyvals[i])
+			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
 		if !surroundKeys[k] {
@@ -616,6 +616,14 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 //   suffixKeys:     append  parent's keys (XXX no ease way to replace!)
 //   keysFormat:     use parent only by default (set to DefaultKeyValFormat to drop parent's value)
 func (l *Logger) mergeParent() {
+	// Handle recursive calls, like in case "key is not string".
+	l.RLock()
+	if l.parent == nil {
+		l.RUnlock()
+		return
+	}
+	l.RUnlock()
+
 	l.Lock()
 	defer l.Unlock()
 	p := l.parent
@@ -669,9 +677,9 @@ func (l *Logger) getFormat(k string) string {
 func getPackageDepth() int {
 	_, callerFile, _, ok := runtime.Caller(1)
 	callerPkg, _ := path.Split(callerFile)
-	for depth := 1; ok; depth++ {
+	for depth := 0; ok; depth++ {
 		var nextFile string
-		_, nextFile, _, ok = runtime.Caller(1 + depth)
+		_, nextFile, _, ok = runtime.Caller(2 + depth)
 		nextPkg, _ := path.Split(nextFile)
 		if callerPkg != nextPkg {
 			return depth
