@@ -383,24 +383,21 @@ func (l *Logger) IsDebug() bool {
 	return *l.level <= DBG
 }
 
-// Err log defaultKeyvals, msg and keyvals with level ERR and return msg.
+// Err log defaultKeyvals, msg and keyvals with level ERR and returns
+// first arg of error type or msg if there are no errors in args.
+//
+//   return log.Err("message to log", "error to log and return", err)
+//   return log.Err(errors.New("error to log and return"), "error to log", err)
 func (l *Logger) Err(msg interface{}, keyvals ...interface{}) error {
 	l.log(ERR, msg, keyvals...)
-	if err, ok := msg.(error); ok {
-		return err
-	} else {
-		return fmt.Errorf("%s", msg)
-	}
+	return getErr(msg, keyvals...)
 }
 
-// Warn log defaultKeyvals, msg and keyvals with level WRN and return msg.
+// Warn log defaultKeyvals, msg and keyvals with level WRN and returns
+// first arg of error type or msg if there are no errors in args.
 func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) error {
 	l.log(WRN, msg, keyvals...)
-	if err, ok := msg.(error); ok {
-		return err
-	} else {
-		return fmt.Errorf("%s", msg)
-	}
+	return getErr(msg, keyvals...)
 }
 
 // Info log defaultKeyvals, msg and keyvals with level INF.
@@ -681,4 +678,17 @@ func getPackageDepth() int {
 		}
 	}
 	return 0
+}
+
+// getErr returns first arg of type error or msg.
+func getErr(msg interface{}, keyvals ...interface{}) error {
+	if err, ok := msg.(error); ok {
+		return err
+	}
+	for _, keyval := range keyvals {
+		if err, ok := keyval.(error); ok {
+			return err
+		}
+	}
+	return fmt.Errorf("%s", msg)
 }
