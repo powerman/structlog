@@ -54,8 +54,10 @@ const (
 	KeyMessage = "_m" // Key name used to output log message.
 	KeyFunc    = "_f" // Key name used to output caller's function name.
 	KeySource  = "_s" // Key name used to output caller's file and line.
+	KeyStack   = "__" // Key name used to output multiline stack trace.
 )
 
+const auto = "???" // Maybe became public to allow manual stack trace.
 const unknown = "???"
 
 // ParseLevel convert levelName from flag or config file into logLevel.
@@ -118,7 +120,7 @@ var (
 	).SetPrefixKeys(
 		KeyApp, KeyPID, KeyLevel, KeyUnit,
 	).SetSuffixKeys(
-		KeyFunc, KeySource,
+		KeyFunc, KeySource, KeyStack,
 	).SetKeysFormat(map[string]string{
 		KeyApp:     "%[2]s",
 		KeyPID:     "[%[2]d]",
@@ -127,6 +129,7 @@ var (
 		KeyMessage: " %#[2]q",
 		KeyFunc:    " \t@ %[2]s",
 		KeySource:  "(%[2]s)",
+		KeyStack:   "\n%[2]s",
 	})
 )
 
@@ -146,7 +149,7 @@ func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
 		timeFormat:   &timeFormat,
 		callDepth:    2,
 		defaultKeyvals: map[string]interface{}{
-			KeyUnit:   unknown, // must be non-nil to enable field, set to unknown for auto-detect
+			KeyUnit:   auto,    // must be non-nil to enable field, set to auto for auto-detect
 			KeyFunc:   unknown, // must be non-nil to enable field
 			KeySource: unknown, // must be non-nil to enable field
 		},
@@ -383,6 +386,28 @@ func (l *Logger) IsDebug() bool {
 	return *l.level <= DBG
 }
 
+// Recover calls recover(), and if it returns non-nil, then log
+// defaultKeyvals, value returned by recover() and keyvals with stack
+// trace and level ERR plus stores value returned by recover() into err if
+// err is not nil.
+//
+//   defer log.Recover(nil)
+//   func PanicToErr() (err error) { defer log.Recover(&err); ... }
+func (l *Logger) Recover(err *error, keyvals ...interface{}) {
+	if e := recover(); e != nil {
+		if err != nil {
+			var ok bool
+			if *err, ok = e.(error); !ok {
+				*err = fmt.Errorf("%v", e)
+			}
+		}
+
+		keyvals = append(keyvals, KeyStack, auto)
+		const panicDepth = 2 // runtime.call64, runtime.gopanic
+		l.New().AddCallDepth(panicDepth).log(ERR, e, keyvals...)
+	}
+}
+
 // Err log defaultKeyvals, msg and keyvals with level ERR and returns
 // first arg of error type or msg if there are no errors in args.
 //
@@ -552,10 +577,10 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	// 8. Add func and source unless user set them to nil.
 	_, okFunc := keys[KeyFunc]
 	_, okSource := keys[KeySource]
-	if okUnit && unit == unknown || okSource || okFunc {
+	if okUnit && unit == auto || okSource || okFunc {
 		if pc, file, line, ok := runtime.Caller(l.callDepth); ok {
 			dir, file := path.Split(file)
-			if okUnit && unit == unknown {
+			if okUnit && unit == auto {
 				keys[KeyUnit] = path.Base(dir)
 			}
 			if okFunc {
@@ -565,6 +590,14 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 				keys[KeySource] = fmt.Sprintf("%s:%d", file, line)
 			}
 		}
+	}
+	// 9. Add stack trace if user asks for it.
+	//    If user didn't provide custom value then use default one.
+	stack, okStack := keys[KeyStack]
+	if okStack && stack == auto {
+		const size = 64 << 10
+		buf := make([]byte, size)
+		keys[KeyStack] = string(buf[:runtime.Stack(buf, false)])
 	}
 
 	// Now we've prepared all middleKeys plus some prefixKeys/suffixKeys

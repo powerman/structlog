@@ -18,7 +18,7 @@
   * disable inherited default keys
 - warn about imbalanced key/value pairs
 - first parameter to log functions should be value for "message" service key
-- TODO able to output stack trace
+- able to output stack trace
 - level-guards like IsDebug()
 - output complex struct as key values (using "%v" like formatting)
 - Warn and Error returns message as error (auto-convert from string, if needed)
