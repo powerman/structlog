@@ -50,14 +50,18 @@ const (
 	KeyApp     = "_a" // Key name used to output app name.
 	KeyPID     = "_p" // Key name used to output PID.
 	KeyLevel   = "_l" // Key name used to output log level.
-	KeyUnit    = "_u" // Key name used to output unit/module/package name. XXX Use dir name instead of package by default.
+	KeyUnit    = "_u" // Key name used to output unit/module/package name.
 	KeyMessage = "_m" // Key name used to output log message.
 	KeyFunc    = "_f" // Key name used to output caller's function name.
 	KeySource  = "_s" // Key name used to output caller's file and line.
 	KeyStack   = "__" // Key name used to output multiline stack trace.
 )
 
-const auto = "???" // Maybe became public to allow manual stack trace.
+// Auto can be used as value for KeyUnit and KeyStack to automatically
+// generate their values: caller package's directory name and full stack
+// of the current goroutine.
+const Auto = "\x00"
+
 const unknown = "???"
 
 // ParseLevel convert levelName from flag or config file into logLevel.
@@ -149,7 +153,7 @@ func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
 		timeFormat:   &timeFormat,
 		callDepth:    2,
 		defaultKeyvals: map[string]interface{}{
-			KeyUnit:   auto,    // must be non-nil to enable field, set to auto for auto-detect
+			KeyUnit:   Auto,    // must be non-nil to enable field
 			KeyFunc:   unknown, // must be non-nil to enable field
 			KeySource: unknown, // must be non-nil to enable field
 		},
@@ -402,7 +406,7 @@ func (l *Logger) Recover(err *error, keyvals ...interface{}) {
 			}
 		}
 
-		keyvals = append(keyvals, KeyStack, auto)
+		keyvals = append(keyvals, KeyStack, Auto)
 		const panicDepth = 2 // runtime.call64, runtime.gopanic
 		l.New().AddCallDepth(panicDepth).log(ERR, e, keyvals...)
 	}
@@ -577,10 +581,10 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	// 8. Add func and source unless user set them to nil.
 	_, okFunc := keys[KeyFunc]
 	_, okSource := keys[KeySource]
-	if okUnit && unit == auto || okSource || okFunc {
+	if okUnit && unit == Auto || okSource || okFunc {
 		if pc, file, line, ok := runtime.Caller(l.callDepth); ok {
 			dir, file := path.Split(file)
-			if okUnit && unit == auto {
+			if okUnit && unit == Auto {
 				keys[KeyUnit] = path.Base(dir)
 			}
 			if okFunc {
@@ -594,7 +598,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	// 9. Add stack trace if user asks for it.
 	//    If user didn't provide custom value then use default one.
 	stack, okStack := keys[KeyStack]
-	if okStack && stack == auto {
+	if okStack && stack == Auto {
 		const size = 64 << 10
 		buf := make([]byte, size)
 		keys[KeyStack] = string(buf[:runtime.Stack(buf, false)])
