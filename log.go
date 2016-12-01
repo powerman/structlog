@@ -38,11 +38,12 @@ const (
 )
 
 const (
-	DefaultLogFormat    = Text
-	DefaultLogLevel     = DBG
-	DefaultKeyValFormat = ` %s=%v`
-	DefaultTimeFormat   = time.StampMicro
-	MissingValue        = "(MISSING)"
+	DefaultLogFormat     = Text
+	DefaultLogLevel      = DBG
+	DefaultKeyValFormat  = ` %s=%v`
+	DefaultTimeFormat    = time.StampMicro
+	DefaultTimeValFormat = time.RFC3339Nano
+	MissingValue         = "(MISSING)"
 )
 
 const (
@@ -106,6 +107,7 @@ type Logger struct {
 	level          *logLevel
 	keyValFormat   *string
 	timeFormat     *string
+	timeValFormat  *string
 	callDepth      int
 	defaultKeyvals map[string]interface{}
 	prefixKeys     []string
@@ -140,18 +142,20 @@ var (
 // NewZeroLogger creates and returns a new logger with empty settings.
 func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
 	var (
-		format       = DefaultLogFormat
-		level        = DefaultLogLevel
-		keyValFormat = DefaultKeyValFormat
-		timeFormat   = DefaultTimeFormat
+		format        = DefaultLogFormat
+		level         = DefaultLogLevel
+		keyValFormat  = DefaultKeyValFormat
+		timeFormat    = DefaultTimeFormat
+		timeValFormat = DefaultTimeValFormat
 	)
 	return (&Logger{
-		parent:       nil,
-		format:       &format,
-		level:        &level,
-		keyValFormat: &keyValFormat,
-		timeFormat:   &timeFormat,
-		callDepth:    2,
+		parent:        nil,
+		format:        &format,
+		level:         &level,
+		keyValFormat:  &keyValFormat,
+		timeFormat:    &timeFormat,
+		timeValFormat: &timeValFormat,
+		callDepth:     2,
 		defaultKeyvals: map[string]interface{}{
 			KeyUnit:   Auto,    // must be non-nil to enable field
 			KeyFunc:   unknown, // must be non-nil to enable field
@@ -225,6 +229,17 @@ func (l *Logger) SetTimeFormat(format string) *Logger {
 	l.Lock()
 	defer l.Unlock()
 	l.timeFormat = &format
+	return l
+}
+
+// SetTimeValFormat changes format for time.Time.Format used when output
+// time.Time values (default value is DefaultTimeValFormat).
+//
+// It doesn't creates a new logger, it returns l just for convenience.
+func (l *Logger) SetTimeValFormat(format string) *Logger {
+	l.Lock()
+	defer l.Unlock()
+	l.timeValFormat = &format
 	return l
 }
 
@@ -567,7 +582,11 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 			middleKeys = append(middleKeys, k)
 			middleFormat = append(middleFormat, l.getFormat(k))
 		}
-		keys[k] = keyvals[i+1]
+		if t, ok := keyvals[i+1].(time.Time); ok {
+			keys[k] = t.Format(*l.timeValFormat)
+		} else {
+			keys[k] = keyvals[i+1]
+		}
 	}
 	// 5. Add current time if output format is JSON.
 	if *l.format == JSON {
@@ -647,6 +666,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 //   level:          use parent only by default
 //   keyValFormat:   use parent only by default
 //   timeFormat:     use parent only by default
+//   timeValFormat:  use parent only by default
 //   callDepth:      add parent's
 //   defaultKeyvals: use parent only by default (set key to nil to drop parent's value)
 //   prefixKeys:     prepend parent's keys (XXX no ease way to replace!)
@@ -682,6 +702,9 @@ func (l *Logger) mergeParent() {
 	}
 	if l.timeFormat == nil {
 		l.timeFormat = p.timeFormat
+	}
+	if l.timeValFormat == nil {
+		l.timeValFormat = p.timeValFormat
 	}
 	l.callDepth += p.callDepth
 	for k, v := range p.defaultKeyvals {
