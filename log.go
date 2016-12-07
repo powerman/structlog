@@ -175,6 +175,9 @@ func New(defaultKeyvals ...interface{}) *Logger {
 
 // New creates and returns a new logger which inherits all settings from l.
 func (l *Logger) New(defaultKeyvals ...interface{}) *Logger {
+	if l == nil {
+		panic("New called on nil *Logger")
+	}
 	return (&Logger{
 		parent:         l,
 		callDepth:      0,
