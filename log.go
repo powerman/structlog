@@ -440,11 +440,9 @@ func (l *Logger) Err(msg interface{}, keyvals ...interface{}) error {
 	return getErr(msg, keyvals...)
 }
 
-// Warn log defaultKeyvals, msg and keyvals with level WRN and returns
-// first arg of error type or msg if there are no errors in args.
-func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) error {
+// Warn log defaultKeyvals, msg and keyvals with level WRN.
+func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) {
 	l.log(WRN, msg, keyvals...)
-	return getErr(msg, keyvals...)
 }
 
 // Info log defaultKeyvals, msg and keyvals with level INF.
