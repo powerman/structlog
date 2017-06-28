@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/powerman/structlog"
+	"github.com/LiflandGaming/structlog"
 
 	. "gopkg.in/check.v1"
 )
@@ -59,7 +59,7 @@ func (s *TestSuite) TestRace1(c *C) {
 	var wg sync.WaitGroup
 	wg.Add(4)
 	start := make(chan struct{})
-	go func() { <-start; log.Err("failed"); wg.Done() }()
+	go func() { <-start; log.Error("failed"); wg.Done() }()
 	go func() { <-start; log.Warn("hmm"); wg.Done() }()
 	go func() { <-start; log1.Info("done"); wg.Done() }()
 	go func() { <-start; log2.Debug("dump"); wg.Done() }()
@@ -73,7 +73,13 @@ func (s *TestSuite) TestRace2(c *C) {
 	var wg sync.WaitGroup
 	wg.Add(4)
 	start := make(chan struct{})
-	go func() { <-start; log := structlog.New(); log.SetDefaultKeyvals("key", 1); log.Err("failed"); wg.Done() }()
+	go func() {
+		<-start
+		log := structlog.New()
+		log.SetDefaultKeyvals("key", 1)
+		log.Error("failed")
+		wg.Done()
+	}()
 	go func() { <-start; log := structlog.New(); log.SetDefaultKeyvals("key", 2); log.Warn("hmm"); wg.Done() }()
 	go func() { <-start; log := structlog.New(); log.SetDefaultKeyvals("key", 3); log.Info("done"); wg.Done() }()
 	go func() { <-start; log := structlog.New(); log.SetDefaultKeyvals("key", 4); log.Debug("dump"); wg.Done() }()
