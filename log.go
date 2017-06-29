@@ -440,6 +440,12 @@ func (l *Logger) Err(msg interface{}, keyvals ...interface{}) error {
 	return getErr(msg, keyvals...)
 }
 
+// Error
+func (l *Logger) Error(msg interface{}, keyvals ...interface{}) error {
+	l.log(ERR, msg, keyvals...)
+	return getErr(msg, keyvals...)
+}
+
 // Warn log defaultKeyvals, msg and keyvals with level WRN.
 func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) {
 	l.log(WRN, msg, keyvals...)
@@ -465,6 +471,24 @@ func (l *Logger) Print(v ...interface{}) {
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	l.log(INF, fmt.Sprintf(format, v...))
+}
+
+// Errorf works like log.Printf. Use level ERR.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Errorf(format string, v ...interface{}) {
+	l.log(ERR, fmt.Sprintf(format, v...))
+}
+
+// Infof works like log.Printf. Use level INF.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Infof(format string, v ...interface{}) {
+	l.log(INF, fmt.Sprintf(format, v...))
+}
+
+// Debugf works like log.Printf. Use level DBG.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Debugf(format string, v ...interface{}) {
+	l.log(DBG, fmt.Sprintf(format, v...))
 }
 
 // Println works like log.Println. Use level INF.
