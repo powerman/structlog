@@ -440,12 +440,6 @@ func (l *Logger) Err(msg interface{}, keyvals ...interface{}) error {
 	return getErr(msg, keyvals...)
 }
 
-// Error
-func (l *Logger) Error(msg interface{}, keyvals ...interface{}) error {
-	l.log(ERR, msg, keyvals...)
-	return getErr(msg, keyvals...)
-}
-
 // Warn log defaultKeyvals, msg and keyvals with level WRN.
 func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) {
 	l.log(WRN, msg, keyvals...)
@@ -471,24 +465,6 @@ func (l *Logger) Print(v ...interface{}) {
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	l.log(INF, fmt.Sprintf(format, v...))
-}
-
-// Errorf works like log.Printf. Use level ERR.
-// Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Errorf(format string, v ...interface{}) {
-	l.log(ERR, fmt.Sprintf(format, v...))
-}
-
-// Infof works like log.Printf. Use level INF.
-// Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Infof(format string, v ...interface{}) {
-	l.log(INF, fmt.Sprintf(format, v...))
-}
-
-// Debugf works like log.Printf. Use level DBG.
-// Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Debugf(format string, v ...interface{}) {
-	l.log(DBG, fmt.Sprintf(format, v...))
 }
 
 // Println works like log.Println. Use level INF.
@@ -784,4 +760,41 @@ func getErr(msg interface{}, keyvals ...interface{}) error {
 		}
 	}
 	return fmt.Errorf("%s", msg)
+}
+
+// Error is an alias to Err() added to make structlog more compatible with logrus
+func (l *Logger) Error(msg interface{}, keyvals ...interface{}) error {
+	return l.Err(msg, keyvals...)
+}
+
+// Errorf works like log.Printf. Use level ERR.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Errorf(format string, v ...interface{}) {
+	l.log(ERR, fmt.Sprintf(format, v...))
+}
+
+// Infof works like log.Printf. Use level INF.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Infof(format string, v ...interface{}) {
+	l.log(INF, fmt.Sprintf(format, v...))
+}
+
+// Debugf works like log.Printf. Use level DBG.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Debugf(format string, v ...interface{}) {
+	l.log(DBG, fmt.Sprintf(format, v...))
+}
+
+// WithField is an alias to New() added to make structlog more compatible with logrus
+func (l *Logger) WithField(key string, value interface{}) *Logger {
+	return l.New(key, value)
+}
+
+// WithFields is an alias to New() added to make structlog more compatible with logrus
+func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
+	params := make([]interface{}, 0, len(fields)*2)
+	for key, val := range fields {
+		params = append(params, key, val)
+	}
+	return l.New(params...)
 }
