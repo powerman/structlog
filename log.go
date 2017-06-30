@@ -38,6 +38,13 @@ const (
 )
 
 const (
+	DebugLevel    = DBG
+	InfoLevel     = INF
+	TextFormatter = Text
+	JSONFormatte  = JSON
+)
+
+const (
 	DefaultLogFormat     = Text
 	DefaultLogLevel      = DBG
 	DefaultKeyValFormat  = ` %s=%v`
@@ -446,7 +453,7 @@ func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) {
 }
 
 // Info log defaultKeyvals, msg and keyvals with level INF.
-func (l *Logger) Info(msg interface{}, keyvals ...interface{}) {
+func (l *Logger) Info(msg string, keyvals ...interface{}) {
 	l.log(INF, msg, keyvals...)
 }
 
@@ -763,8 +770,8 @@ func getErr(msg interface{}, keyvals ...interface{}) error {
 }
 
 // Error is an alias to Err() added to make structlog more compatible with logrus
-func (l *Logger) Error(msg interface{}, keyvals ...interface{}) error {
-	return l.Err(msg, keyvals...)
+func (l *Logger) Error(msg string, keyvals ...interface{}) {
+	l.Err(msg, keyvals...)
 }
 
 // Errorf works like log.Printf. Use level ERR.
@@ -797,4 +804,14 @@ func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
 		params = append(params, key, val)
 	}
 	return l.New(params...)
+}
+
+// SetFormatter is an alias to SetLogFormat
+func (l *Logger) SetFormatter(format logFormat) *Logger {
+	return l.SetLogFormat(format)
+}
+
+// SetLevel is an alias to SetLogLevel
+func (l *Logger) SetLevel(level logLevel) *Logger {
+	return l.SetLogLevel(level)
 }
