@@ -10,7 +10,9 @@ import (
 
 	"github.com/LiflandGaming/structlog"
 
+	"bytes"
 	. "gopkg.in/check.v1"
+	"regexp"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -86,4 +88,38 @@ func (s *TestSuite) TestRace2(c *C) {
 	close(start)
 	wg.Wait()
 	c.Succeed()
+}
+
+func (s *TestSuite) TestWithFields(c *C) {
+	buf := make([]byte, 200)
+	writer := bytes.NewBuffer(buf)
+	log.SetOutput(writer)
+	defer log.SetOutput(ioutil.Discard)
+
+	log := structlog.New()
+	log.SetLogFormat(structlog.JSONFormatte)
+	log1 := log.WithField("key", "value")
+	log2 := log1.WithField("key2", "value2")
+
+	log2.Printf("Test %v", "message")
+
+	// workaround, because 	c.Assert(writer.String(), Matches, `.*key.*`) not working
+	ok, err := regexp.MatchString(`.*"key":"value".*`, writer.String())
+	if err != nil {
+		c.Error(err)
+	}
+	c.Assert(ok, Equals, true)
+
+	ok, err = regexp.MatchString(`.*"key2":"value2".*`, writer.String())
+	if err != nil {
+		c.Error(err)
+	}
+	c.Assert(ok, Equals, true)
+
+	ok, err = regexp.MatchString(`.*"Test message".*`, writer.String())
+	if err != nil {
+		c.Error(err)
+	}
+	c.Assert(ok, Equals, true)
+
 }
