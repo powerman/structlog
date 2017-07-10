@@ -557,6 +557,9 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	surroundKeys := make(map[string]bool, len(l.prefixKeys)+len(l.suffixKeys))
 
 	// Gather keys for output:
+	// 0. Add defaultKeyvals
+	keys = l.defaultKeyvals
+
 	// 1. Add prefixKeys which has non-nil defaultKeyVals.
 	for _, k := range l.prefixKeys {
 		surroundKeys[k] = true
