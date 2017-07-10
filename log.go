@@ -38,6 +38,13 @@ const (
 )
 
 const (
+	DebugLevel    = DBG
+	InfoLevel     = INF
+	TextFormatter = Text
+	JSONFormatte  = JSON
+)
+
+const (
 	DefaultLogFormat     = Text
 	DefaultLogLevel      = DBG
 	DefaultKeyValFormat  = ` %s=%v`
@@ -446,7 +453,7 @@ func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) {
 }
 
 // Info log defaultKeyvals, msg and keyvals with level INF.
-func (l *Logger) Info(msg interface{}, keyvals ...interface{}) {
+func (l *Logger) Info(msg string, keyvals ...interface{}) {
 	l.log(INF, msg, keyvals...)
 }
 
@@ -550,6 +557,9 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	surroundKeys := make(map[string]bool, len(l.prefixKeys)+len(l.suffixKeys))
 
 	// Gather keys for output:
+	// 0. Add defaultKeyvals
+	keys = l.defaultKeyvals
+
 	// 1. Add prefixKeys which has non-nil defaultKeyVals.
 	for _, k := range l.prefixKeys {
 		surroundKeys[k] = true
@@ -760,4 +770,51 @@ func getErr(msg interface{}, keyvals ...interface{}) error {
 		}
 	}
 	return fmt.Errorf("%s", msg)
+}
+
+// Error is an alias to Err() added to make structlog more compatible with logrus
+func (l *Logger) Error(msg string, keyvals ...interface{}) {
+	l.Err(msg, keyvals...)
+}
+
+// Errorf works like log.Printf. Use level ERR.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Errorf(format string, v ...interface{}) {
+	l.log(ERR, fmt.Sprintf(format, v...))
+}
+
+// Infof works like log.Printf. Use level INF.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Infof(format string, v ...interface{}) {
+	l.log(INF, fmt.Sprintf(format, v...))
+}
+
+// Debugf works like log.Printf. Use level DBG.
+// Also output defaultKeyvals for prefixKeys/suffixKeys.
+func (l *Logger) Debugf(format string, v ...interface{}) {
+	l.log(DBG, fmt.Sprintf(format, v...))
+}
+
+// WithField is an alias to New() added to make structlog more compatible with logrus
+func (l *Logger) WithField(key string, value interface{}) *Logger {
+	return l.New(key, value)
+}
+
+// WithFields is an alias to New() added to make structlog more compatible with logrus
+func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
+	params := make([]interface{}, 0, len(fields)*2)
+	for key, val := range fields {
+		params = append(params, key, val)
+	}
+	return l.New(params...)
+}
+
+// SetFormatter is an alias to SetLogFormat
+func (l *Logger) SetFormatter(format logFormat) *Logger {
+	return l.SetLogFormat(format)
+}
+
+// SetLevel is an alias to SetLogLevel
+func (l *Logger) SetLevel(level logLevel) *Logger {
+	return l.SetLogLevel(level)
 }
