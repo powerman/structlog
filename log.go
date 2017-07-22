@@ -430,6 +430,13 @@ func (l *Logger) Recover(err *error, keyvals ...interface{}) {
 	}
 }
 
+// PrintErr log defaultKeyvals, msg and keyvals with level ERR.
+//
+// In most cases you should use Err instead, to both log and handle error.
+func (l *Logger) PrintErr(msg interface{}, keyvals ...interface{}) {
+	l.log(ERR, msg, keyvals...)
+}
+
 // Err log defaultKeyvals, msg and keyvals with level ERR and returns
 // first arg of error type or msg if there are no errors in args.
 //
