@@ -430,6 +430,46 @@ func (l *Logger) Recover(err *error, keyvals ...interface{}) {
 	}
 }
 
+// ErrIfFail will run f and log defaultKeyvals, returned error and
+// keyvals with level ERR if returned error is not nil.
+//
+//   defer log.ErrIfFail(file.Close)
+func (l *Logger) ErrIfFail(f func() error, keyvals ...interface{}) {
+	if err := f(); err != nil {
+		l.log(ERR, err, keyvals...)
+	}
+}
+
+// WarnIfFail will run f and log defaultKeyvals, returned error and
+// keyvals with level WRN if returned error is not nil.
+//
+//   defer log.WarnIfFail(file.Close)
+func (l *Logger) WarnIfFail(f func() error, keyvals ...interface{}) {
+	if err := f(); err != nil {
+		l.log(WRN, err, keyvals...)
+	}
+}
+
+// InfoIfFail will run f and log defaultKeyvals, returned error and
+// keyvals with level INF if returned error is not nil.
+//
+//   defer log.InfoIfFail(file.Close)
+func (l *Logger) InfoIfFail(f func() error, keyvals ...interface{}) {
+	if err := f(); err != nil {
+		l.log(INF, err, keyvals...)
+	}
+}
+
+// DebugIfFail will run f and log defaultKeyvals, returned error and
+// keyvals with level DBG if returned error is not nil.
+//
+//   defer log.DebugIfFail(file.Close)
+func (l *Logger) DebugIfFail(f func() error, keyvals ...interface{}) {
+	if err := f(); err != nil {
+		l.log(DBG, err, keyvals...)
+	}
+}
+
 // PrintErr log defaultKeyvals, msg and keyvals with level ERR.
 //
 // In most cases you should use Err instead, to both log and handle error.
