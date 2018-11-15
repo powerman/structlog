@@ -25,11 +25,13 @@ type (
 	logLevel  byte
 )
 
+// Log formats.
 const (
 	Text logFormat = iota
 	JSON
 )
 
+// Log levels.
 const (
 	DBG logLevel = iota
 	INF
@@ -37,6 +39,7 @@ const (
 	ERR
 )
 
+// Defaults.
 const (
 	DefaultLogFormat     = Text
 	DefaultLogLevel      = DBG
@@ -46,6 +49,7 @@ const (
 	MissingValue         = "(MISSING)"
 )
 
+// Predefined key names.
 const (
 	KeyTime    = "_t" // Key name used to output current time.
 	KeyApp     = "_a" // Key name used to output app name.
@@ -66,7 +70,7 @@ const Auto = "\x00"
 const unknown = "???"
 
 // ParseLevel convert levelName from flag or config file into logLevel.
-func ParseLevel(levelName string) logLevel {
+func ParseLevel(levelName string) logLevel { // nolint:golint
 	switch strings.ToLower(levelName) {
 	case "err", "error", "fatal", "crit", "critical", "alert", "emerg", "emergency":
 		return ERR
@@ -77,7 +81,7 @@ func ParseLevel(levelName string) logLevel {
 	case "dbg", "debug", "trace":
 		return DBG
 	default:
-		DefaultLogger.Err("failed", "levelName", levelName)
+		_ = DefaultLogger.Err("failed", "levelName", levelName)
 		return DBG
 	}
 }
@@ -101,6 +105,7 @@ func (l logLevel) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + l.String() + `"`), nil
 }
 
+// Logger implements structured logger.
 type Logger struct {
 	parent         *Logger
 	format         *logFormat
@@ -277,13 +282,13 @@ func (l *Logger) AddCallDepth(depth int) *Logger {
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetDefaultKeyvals(keyvals ...interface{}) *Logger {
 	if len(keyvals)%2 != 0 {
-		l.New().AddCallDepth(getPackageDepth()).Err("odd keyvals")
+		_ = l.New().AddCallDepth(getPackageDepth()).Err("odd keyvals")
 		keyvals = append(keyvals, MissingValue)
 	}
 	for i := 0; i < len(keyvals); i += 2 {
 		k, ok := keyvals[i].(string)
 		if !ok {
-			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
+			_ = l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
 		l.Lock()
@@ -565,7 +570,7 @@ func (l *Logger) Panicln(v ...interface{}) {
 	panic(s)
 }
 
-func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
+func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { // nolint:gocyclo
 	l.RLock()
 	defer l.RUnlock()
 	if l.parent != nil {
@@ -579,7 +584,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	}
 
 	if len(keyvals)%2 != 0 {
-		l.New().AddCallDepth(getPackageDepth()).Err("odd keyvals")
+		_ = l.New().AddCallDepth(getPackageDepth()).Err("odd keyvals")
 		keyvals = append(keyvals, MissingValue)
 	}
 
@@ -623,7 +628,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	for i := 0; i < len(keyvals); i += 2 {
 		k, ok := keyvals[i].(string)
 		if !ok {
-			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
+			_ = l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
 		if !surroundKeys[k] {
@@ -649,8 +654,8 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) {
 	_, okFunc := keys[KeyFunc]
 	_, okSource := keys[KeySource]
 	if okUnit && unit == Auto || okSource || okFunc {
-		if pc, file, line, ok := runtime.Caller(l.callDepth); ok {
-			dir, file := path.Split(file)
+		if pc, filepath, line, ok := runtime.Caller(l.callDepth); ok {
+			dir, file := path.Split(filepath)
 			if okUnit && unit == Auto {
 				keys[KeyUnit] = path.Base(dir)
 			}
