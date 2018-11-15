@@ -1,4 +1,4 @@
-= structlog image:https://godoc.org/github.com/powerman/structlog?status.svg["GoDoc",link="http://godoc.org/github.com/powerman/structlog"] image:https://travis-ci.org/powerman/structlog.svg["Build Status",link="https://travis-ci.org/powerman/structlog"] image:https://coveralls.io/repos/powerman/structlog/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/powerman/structlog?branch=master"]
+= structlog image:https://godoc.org/github.com/powerman/structlog?status.svg["GoDoc",link="http://godoc.org/github.com/powerman/structlog"] image:https://circleci.com/gh/powerman/structlog.svg?style=svg["CircleCI", link="https://circleci.com/gh/powerman/structlog"] image:https://coveralls.io/repos/powerman/structlog/badge.svg?branch=master&service=github["Coverage Status",link="https://coveralls.io/github/powerman/structlog?branch=master"]
 
 == Features
 
