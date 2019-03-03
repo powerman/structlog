@@ -69,6 +69,18 @@ const Auto = "\x00"
 
 const unknown = "???"
 
+// Printer is an interface used to output log.
+type Printer interface {
+	// Print outputs v plus \n. Arguments are handled in the manner of fmt.Print.
+	Print(v ...interface{})
+}
+
+// The PrinterFunc type is an adapter to allow the use of ordinary functions as Printer.
+type PrinterFunc func(v ...interface{})
+
+// Print outputs v plus \n. Arguments are handled in the manner of fmt.Print.
+func (f PrinterFunc) Print(v ...interface{}) { f(v...) }
+
 // ParseLevel convert levelName from flag or config file into logLevel.
 func ParseLevel(levelName string) logLevel { // nolint:golint
 	switch strings.ToLower(levelName) {
@@ -108,6 +120,7 @@ func (l logLevel) MarshalJSON() ([]byte, error) {
 // Logger implements structured logger.
 type Logger struct {
 	parent         *Logger
+	printer        Printer
 	format         *logFormat
 	level          *logLevel
 	keyValFormat   *string
@@ -155,6 +168,7 @@ func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
 	)
 	return (&Logger{
 		parent:        nil,
+		printer:       PrinterFunc(log.Print),
 		format:        &format,
 		level:         &level,
 		keyValFormat:  &keyValFormat,
@@ -191,6 +205,18 @@ func (l *Logger) New(defaultKeyvals ...interface{}) *Logger {
 		suffixKeys:     make([]string, 0, 16),
 		keysFormat:     make(map[string]string, 16),
 	}).SetDefaultKeyvals(defaultKeyvals...)
+}
+
+// SetPrinter changes log output destination (default value is
+// PrinterFunc(log.Print), i.e. use standard logger, which will be
+// configured using log.SetFlags(0) while importing this package).
+//
+// It doesn't creates a new logger, it returns l just for convenience.
+func (l *Logger) SetPrinter(printer Printer) *Logger {
+	l.Lock()
+	defer l.Unlock()
+	l.printer = printer
+	return l
 }
 
 // SetLogFormat changes log output format (default value is
@@ -695,15 +721,15 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 
 	// Output.
 	if *l.format == Text {
-		log.Print(values...)
+		l.printer.Print(values...)
 	} else {
 		// TODO Split this function into separate ones for Text
 		// and JSON formats, to avoid useless text formatting for JSON.
 		buf, err := json.Marshal(keys)
 		if err != nil {
-			log.Print(err)
+			l.printer.Print(err)
 		} else {
-			log.Print(string(buf))
+			l.printer.Print(string(buf))
 		}
 	}
 }
@@ -715,6 +741,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 // DefaultLogger to package-global log vars in other packages, if they
 // didn't already used log within init().
 //
+//   printer:        use parent only by default
 //   format:         use parent only by default
 //   level:          use parent only by default
 //   keyValFormat:   use parent only by default
@@ -725,7 +752,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 //   prefixKeys:     prepend parent's keys (XXX no ease way to replace!)
 //   suffixKeys:     append  parent's keys (XXX no ease way to replace!)
 //   keysFormat:     use parent only by default (set to DefaultKeyValFormat to drop parent's value)
-func (l *Logger) mergeParent() {
+func (l *Logger) mergeParent() { // nolint:gocyclo
 	// Handle recursive calls, like in case "key is not string".
 	l.RLock()
 	if l.parent == nil {
@@ -744,6 +771,9 @@ func (l *Logger) mergeParent() {
 	p.RLock()
 	defer p.RUnlock()
 
+	if l.printer == nil {
+		l.printer = p.printer
+	}
 	if l.format == nil {
 		l.format = p.format
 	}
