@@ -7,6 +7,7 @@ package structlog
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -217,6 +218,13 @@ func (l *Logger) SetPrinter(printer Printer) *Logger {
 	defer l.Unlock()
 	l.printer = printer
 	return l
+}
+
+// SetOutput is a convenience wrapper for SetPrinter.
+func (l *Logger) SetOutput(w io.Writer) *Logger {
+	return l.SetPrinter(PrinterFunc(func(v ...interface{}) {
+		fmt.Fprint(w, append(v, "\n")...)
+	}))
 }
 
 // SetLogFormat changes log output format (default value is

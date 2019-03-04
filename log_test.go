@@ -1,13 +1,9 @@
 package structlog_test
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"io"
-	stdlog "log"
-	"os"
-	"strconv"
+	"io/ioutil"
 	"sync"
 	"testing"
 
@@ -15,43 +11,9 @@ import (
 	"github.com/powerman/structlog"
 )
 
-type nilPrinter struct{}
-
-func (np nilPrinter) Print(v ...interface{}) {}
-
-type bufPrinter struct{ bytes.Buffer }
-
-func (bp *bufPrinter) Print(v ...interface{}) { fmt.Fprint(&bp.Buffer, append(v, "\n")...) }
-
-func TestDefaultPrinter(tt *testing.T) {
-	t := check.T(tt)
-	var buf bytes.Buffer
-	stdlog.SetOutput(&buf)
-	defer stdlog.SetOutput(os.Stderr)
-	log := structlog.New()
-	log.Info("something happens", "k1", "v1", "k2", "v2")
-	log.Warn("oops")
-	pid := strconv.Itoa(os.Getpid())
-	t.Equal(buf.String(), ""+
-		"structlog.test["+pid+"] inf structlog: `something happens` k1=v1 k2=v2 \t@ structlog_test.TestDefaultPrinter(log_test.go:32)\n"+
-		"structlog.test["+pid+"] WRN structlog: `oops` \t@ structlog_test.TestDefaultPrinter(log_test.go:33)\n")
-}
-
-func TestPrinter(tt *testing.T) {
-	t := check.T(tt)
-	var buf bufPrinter
-	log := structlog.New().SetPrinter(&buf)
-	log.Info("something happens", "k1", "v1", "k2", "v2")
-	log.Warn("oops")
-	pid := strconv.Itoa(os.Getpid())
-	t.Equal(buf.String(), ""+
-		"structlog.test["+pid+"] inf structlog: `something happens` k1=v1 k2=v2 \t@ structlog_test.TestPrinter(log_test.go:44)\n"+
-		"structlog.test["+pid+"] WRN structlog: `oops` \t@ structlog_test.TestPrinter(log_test.go:45)\n")
-}
-
 func TestGetErr(tt *testing.T) {
 	t := check.T(tt)
-	log := structlog.New().SetPrinter(nilPrinter{})
+	log := structlog.New().SetOutput(ioutil.Discard)
 	myerr := errors.New("my error")
 	t.Err(log.Err(myerr), myerr)
 	t.Err(log.Err(myerr, "err", io.EOF), myerr)
@@ -69,7 +31,7 @@ func TestNewNil(tt *testing.T) {
 
 // Just in case, not sure is it makes any sense to test this.
 func TestRace1(t *testing.T) {
-	log := structlog.New().SetPrinter(nilPrinter{}).SetLogLevel(structlog.INF)
+	log := structlog.New().SetOutput(ioutil.Discard).SetLogLevel(structlog.INF)
 	log1 := log.New("key", "value")
 	log2 := log.New()
 	var wg sync.WaitGroup
@@ -85,7 +47,7 @@ func TestRace1(t *testing.T) {
 
 // Just in case, not sure is it makes any sense to test this.
 func TestRace2(t *testing.T) {
-	log0 := structlog.New().SetPrinter(nilPrinter{})
+	log0 := structlog.New().SetOutput(ioutil.Discard)
 	var wg sync.WaitGroup
 	wg.Add(4)
 	start := make(chan struct{})
