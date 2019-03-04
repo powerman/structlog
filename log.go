@@ -175,7 +175,7 @@ func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
 		keyValFormat:  &keyValFormat,
 		timeFormat:    &timeFormat,
 		timeValFormat: &timeValFormat,
-		callDepth:     2,
+		callDepth:     2, // public method like Err() or Recover() plus l.log()
 		defaultKeyvals: map[string]interface{}{
 			KeyUnit:   Auto,    // must be non-nil to enable field
 			KeyFunc:   unknown, // must be non-nil to enable field
@@ -463,9 +463,17 @@ func (l *Logger) Recover(err *error, keyvals ...interface{}) {
 			}
 		}
 
-		keyvals = append(keyvals, KeyStack, Auto)
-		const panicDepth = 2 // runtime.call64, runtime.gopanic
-		l.New().AddCallDepth(panicDepth).log(ERR, e, keyvals...)
+		runtimeDepth := 1 // there are at least one call to runtime.gopanic
+		var pcs [8]uintptr
+		frames := runtime.CallersFrames(pcs[:runtime.Callers(1+runtimeDepth+1, pcs[:])])
+		for ; ; runtimeDepth++ {
+			frame, more := frames.Next()
+			if !more || !strings.HasPrefix(frame.Function, "runtime.") {
+				break
+			}
+		}
+
+		l.New().AddCallDepth(runtimeDepth).log(ERR, e, append(keyvals, KeyStack, Auto)...)
 	}
 }
 
