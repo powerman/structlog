@@ -24,9 +24,7 @@
 - Error returns message as error (auto-convert from string, if needed)
   * actually it returns first `.(error)` arg if any or message otherwise
 - convenient helpers IfFail and Recover for use with defer
-- TODO defer log.Suppress()() for tests
-- TODO intercept log output as key/value pairs for tests
-- TODO control using environment variables
+- output can be redirected/intercepted
 - when output as JSON:
   * add service field time by default
 - when output as Text:
