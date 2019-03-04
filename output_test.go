@@ -21,7 +21,7 @@ func TestDefaultPrinter(tt *testing.T) {
 	var buf bytes.Buffer
 	stdlog.SetOutput(&buf)
 	defer stdlog.SetOutput(os.Stderr)
-	log := structlog.New()
+	log := structlog.New(structlog.KeyUnit, "structlog")
 	log.Info("something happens", "k1", "v1", "k2", "v2")
 	log.Warn("oops")
 	pid := strconv.Itoa(os.Getpid())
@@ -33,7 +33,7 @@ func TestDefaultPrinter(tt *testing.T) {
 func TestPrinter(tt *testing.T) {
 	t := check.T(tt)
 	var buf bufPrinter
-	log := structlog.New().SetPrinter(&buf)
+	log := structlog.New(structlog.KeyUnit, "structlog").SetPrinter(&buf)
 	log.Info("something happens", "k1", "v1", "k2", "v2")
 	log.Warn("oops")
 	pid := strconv.Itoa(os.Getpid())
@@ -45,7 +45,7 @@ func TestPrinter(tt *testing.T) {
 func TestOutput(tt *testing.T) {
 	t := check.T(tt)
 	var buf bytes.Buffer
-	log := structlog.New().SetOutput(&buf)
+	log := structlog.New(structlog.KeyUnit, "structlog").SetOutput(&buf)
 	log.Info("something happens", "k1", "v1", "k2", "v2")
 	log.Warn("oops")
 	pid := strconv.Itoa(os.Getpid())
