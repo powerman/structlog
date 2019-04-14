@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func init() {
+func init() { //nolint:gochecknoinits
 	log.SetFlags(0)
 }
 
@@ -139,7 +139,7 @@ var (
 	// DefaultLogger provides sane defaults inherited by new logger
 	// objects created with New(). Feel free to change it settings
 	// when your app start.
-	DefaultLogger = NewZeroLogger(
+	DefaultLogger = NewZeroLogger( //nolint:gochecknoglobals
 		KeyApp, path.Base(os.Args[0]),
 		KeyPID, os.Getpid(),
 	).SetPrefixKeys(
@@ -454,7 +454,7 @@ func (l *Logger) IsDebug() bool {
 //
 //   defer log.Recover(nil)
 //   func PanicToErr() (err error) { defer log.Recover(&err); ... }
-func (l *Logger) Recover(err *error, keyvals ...interface{}) {
+func (l *Logger) Recover(err *error, keyvals ...interface{}) { //nolint:gocritic
 	if e := recover(); e != nil {
 		if err != nil {
 			var ok bool
