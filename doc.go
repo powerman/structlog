@@ -5,7 +5,7 @@
 //
 // In short, with structlog you will have to write just this:
 //
-//      log := structlog.New()
+//	log := structlog.New()
 //	log.Warn("something goes wrong", "somevar", var, "err", err)
 //
 // and structlog will take care of the rest (output plain text or JSON,
@@ -14,7 +14,7 @@
 // calculated automatically like caller's details or stack trace).
 //
 // Well, not really. First you'll need to configure logger, to define what
-// "easy to read" means in your case - but this have to be done just once,
+// "easy to read" means in your case - but this has to be done just once,
 // usually in main(), and then you'll get simple and powerful logging as
 // promised above.
 //
@@ -57,8 +57,7 @@
 // logger in global variable structlog.DefaultLogger. So, usually you will
 // configure structlog.DefaultLogger in your main(), to apply this
 // configuration to each and every logger created in any other package of
-// your application. (In case you'll need basic non-configured logger
-// there is structlog.NewZeroLogger().)
+// your application.
 //
 // Then you can do some extra setup on your logger (usually - just add
 // some default key/value pair which should be output by each log call),
@@ -68,9 +67,9 @@
 // E.g. imagine HTTP middlewares: first will detect IP of connected client
 // and store it in logger, second will check authentication and optionally
 // add key/value pair with user ID - as result everything logged by your
-// HTTP handler later using logger preconfigured in these middlewares will
-// include remote IP and user ID in each line - without needs to manually
-// include it in each line where you log something.
+// HTTP handler later using logger preconfigured by these middlewares will
+// include remote IP and user ID in each log record - without needs to
+// manually include it in each line where you log something.
 //
 // Contents
 //
@@ -137,7 +136,7 @@
 //	Printf
 //	Println
 //
-// ★ Redirecting log output (useful to redirect to io.DevNull in tests):
+// ★ Redirecting log output (useful to redirect to ioutil.Discard in tests):
 //
 //	SetOutput
 //	SetPrinter
