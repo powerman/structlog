@@ -1,7 +1,3 @@
-// Package structlog provides structured logger which looks friendly as
-// plain text (more like handcrafted vertical-aligned log lines which
-// doesn't feels like key/value pairs) and as JSON (each important
-// value in log line as separate key/value pair).
 package structlog
 
 import (
