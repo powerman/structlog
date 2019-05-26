@@ -100,6 +100,10 @@
 //	ErrIfFail
 //	Recover
 //
+// ★ Delayed logging:
+//
+//	WrapErr
+//
 // ★ Configuring structlog.DefaultLogger in your main():
 //
 //	AppendPrefixKeys
