@@ -90,7 +90,7 @@ func ParseLevel(levelName string) logLevel { // nolint:golint
 	case "dbg", "debug", "trace":
 		return DBG
 	default:
-		_ = DefaultLogger.Err("failed", "levelName", levelName)
+		DefaultLogger.PrintErr("failed", "levelName", levelName)
 		return DBG
 	}
 }
@@ -312,13 +312,13 @@ func (l *Logger) AddCallDepth(depth int) *Logger {
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetDefaultKeyvals(keyvals ...interface{}) *Logger {
 	if len(keyvals)%2 != 0 {
-		_ = l.New().AddCallDepth(getPackageDepth()).Err("odd keyvals")
+		l.New().AddCallDepth(getPackageDepth()).PrintErr("odd keyvals")
 		keyvals = append(keyvals, MissingValue)
 	}
 	for i := 0; i < len(keyvals); i += 2 {
 		k, ok := keyvals[i].(string)
 		if !ok {
-			_ = l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
+			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").PrintErr("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
 		l.Lock()
@@ -622,21 +622,22 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	}
 
 	if len(keyvals)%2 != 0 {
-		_ = l.New().AddCallDepth(getPackageDepth()).Err("odd keyvals")
+		l.New().AddCallDepth(getPackageDepth()).PrintErr("odd keyvals")
 		keyvals = append(keyvals, MissingValue)
 	}
 
 	// TODO Combine all of this in single type and use sync.Pool.
 	// Probably several different pools with different key sizes.
-	// Use same len(keys) capability for all slices.
+	// Use same len(vals) capability for all slices.
 	// TODO Pre-calculate surroundKeys/prefixFormat/suffixFormat in
 	// places where prefixKeys/suffixKeys may change.
-	keys := make(map[string]interface{}, len(l.prefixKeys)+len(keyvals)/2+len(l.suffixKeys))
+	const extraKeys = 7 // KeyMessage, KeyTime, KeyLevel, KeyUnit, KeyFunc, KeySource, KeyStack
+	vals := make(map[string]interface{}, len(l.prefixKeys)+len(keyvals)/2+len(l.suffixKeys)+extraKeys)
 	prefixFormat := make([]string, 0, len(l.prefixKeys))
 	suffixFormat := make([]string, 0, len(l.suffixKeys))
 	middleFormat := make([]string, 0, len(keyvals)/2)
 	middleKeys := make([]string, 0, len(keyvals)/2)
-	values := make([]interface{}, 0, len(keys))
+	values := make([]interface{}, 0, len(vals))
 	surroundKeys := make(map[string]bool, len(l.prefixKeys)+len(l.suffixKeys))
 
 	// Gather keys for output:
@@ -644,7 +645,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	for _, k := range l.prefixKeys {
 		surroundKeys[k] = true
 		if l.defaultKeyvals[k] != nil {
-			keys[k] = l.defaultKeyvals[k]
+			vals[k] = l.defaultKeyvals[k]
 		}
 		prefixFormat = append(prefixFormat, l.getFormat(k))
 	}
@@ -652,21 +653,21 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	for _, k := range l.suffixKeys {
 		surroundKeys[k] = true
 		if l.defaultKeyvals[k] != nil {
-			keys[k] = l.defaultKeyvals[k]
+			vals[k] = l.defaultKeyvals[k]
 		}
 		suffixFormat = append(suffixFormat, l.getFormat(k))
 	}
 	// 3. Add msg to middleKeys. Msg value may be nil.
 	middleKeys = append(middleKeys, KeyMessage)
 	middleFormat = append(middleFormat, l.getFormat(KeyMessage))
-	keys[KeyMessage] = msg
+	vals[KeyMessage] = msg
 	// 4. Add keyvals to prefixKeys/middleKeys/suffixKeys.
 	//    May overwrite prefixKeys/suffixKeys values from defaultKeyvals.
 	//    May have nil values.
 	for i := 0; i < len(keyvals); i += 2 {
 		k, ok := keyvals[i].(string)
 		if !ok {
-			_ = l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").Err("key is not string", "key", keyvals[i])
+			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").PrintErr("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
 		if !surroundKeys[k] {
@@ -674,60 +675,60 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 			middleFormat = append(middleFormat, l.getFormat(k))
 		}
 		if t, ok := keyvals[i+1].(time.Time); ok {
-			keys[k] = t.Format(*l.timeValFormat)
+			vals[k] = t.Format(*l.timeValFormat)
 		} else {
-			keys[k] = keyvals[i+1]
+			vals[k] = keyvals[i+1]
 		}
 	}
 	// 5. Add current time if output format is JSON.
 	if *l.format == JSON {
-		keys[KeyTime] = time.Now().UTC().Format(*l.timeFormat)
+		vals[KeyTime] = time.Now().UTC().Format(*l.timeFormat)
 	}
 	// 6. Add log level.
-	keys[KeyLevel] = level
+	vals[KeyLevel] = level
 	// 7. Add unit unless user set it to nil.
 	//    If user didn't provide custom value then use package name.
-	unit, okUnit := keys[KeyUnit]
+	unit, okUnit := vals[KeyUnit]
 	// 8. Add func and source unless user set them to nil.
-	_, okFunc := keys[KeyFunc]
-	_, okSource := keys[KeySource]
+	_, okFunc := vals[KeyFunc]
+	_, okSource := vals[KeySource]
 	if okUnit && unit == Auto || okSource || okFunc {
 		if pc, filepath, line, ok := runtime.Caller(l.callDepth); ok {
 			dir, file := path.Split(filepath)
 			if okUnit && unit == Auto {
-				keys[KeyUnit] = path.Base(dir)
+				vals[KeyUnit] = path.Base(dir)
 			}
 			if okFunc {
-				keys[KeyFunc] = path.Base(runtime.FuncForPC(pc).Name())
+				vals[KeyFunc] = path.Base(runtime.FuncForPC(pc).Name())
 			}
 			if okSource {
-				keys[KeySource] = fmt.Sprintf("%s:%d", file, line)
+				vals[KeySource] = fmt.Sprintf("%s:%d", file, line)
 			}
 		}
 	}
 	// 9. Add stack trace if user asks for it.
 	//    If user didn't provide custom value then use default one.
-	stack, okStack := keys[KeyStack]
+	stack, okStack := vals[KeyStack]
 	if okStack && stack == Auto {
 		const size = 64 << 10
 		buf := make([]byte, size)
-		keys[KeyStack] = string(buf[:runtime.Stack(buf, false)])
+		vals[KeyStack] = string(buf[:runtime.Stack(buf, false)])
 	}
 
 	// Now we've prepared all middleKeys plus some prefixKeys/suffixKeys
 	// which wasn't disabled (nil in defaultKeyvals) and was provided
 	// (non-nil in defaultKeyvals or anything in keyvals) by user.
 	for i, k := range l.prefixKeys {
-		if _, ok := keys[k]; ok {
-			values = append(values, fmt.Sprintf(prefixFormat[i], k, keys[k]))
+		if _, ok := vals[k]; ok {
+			values = append(values, fmt.Sprintf(prefixFormat[i], k, vals[k]))
 		}
 	}
 	for i, k := range middleKeys {
-		values = append(values, fmt.Sprintf(middleFormat[i], k, keys[k]))
+		values = append(values, fmt.Sprintf(middleFormat[i], k, vals[k]))
 	}
 	for i, k := range l.suffixKeys {
-		if _, ok := keys[k]; ok {
-			values = append(values, fmt.Sprintf(suffixFormat[i], k, keys[k]))
+		if _, ok := vals[k]; ok {
+			values = append(values, fmt.Sprintf(suffixFormat[i], k, vals[k]))
 		}
 	}
 
@@ -737,7 +738,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	} else {
 		// TODO Split this function into separate ones for Text
 		// and JSON formats, to avoid useless text formatting for JSON.
-		buf, err := json.Marshal(keys)
+		buf, err := json.Marshal(vals)
 		if err != nil {
 			l.printer.Print(err)
 		} else {
