@@ -626,6 +626,8 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 		keyvals = append(keyvals, MissingValue)
 	}
 
+	keyvals = append(unwrap(getErr(msg, keyvals...)), keyvals...)
+
 	// TODO Combine all of this in single type and use sync.Pool.
 	// Probably several different pools with different key sizes.
 	// Use same len(vals) capability for all slices.
@@ -664,13 +666,15 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	// 4. Add keyvals to prefixKeys/middleKeys/suffixKeys.
 	//    May overwrite prefixKeys/suffixKeys values from defaultKeyvals.
 	//    May have nil values.
+	seenMiddleKeys := make(map[string]bool, len(middleKeys))
 	for i := 0; i < len(keyvals); i += 2 {
 		k, ok := keyvals[i].(string)
 		if !ok {
 			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").PrintErr("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
-		if !surroundKeys[k] {
+		if !surroundKeys[k] && !seenMiddleKeys[k] {
+			seenMiddleKeys[k] = true
 			middleKeys = append(middleKeys, k)
 			middleFormat = append(middleFormat, l.getFormat(k))
 		}

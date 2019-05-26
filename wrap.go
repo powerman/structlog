@@ -1,0 +1,48 @@
+package structlog
+
+type errWithKeyvals struct {
+	err     error
+	keyvals []interface{}
+}
+
+// Error implements error interface.
+func (err *errWithKeyvals) Error() string {
+	return err.err.Error()
+}
+
+// Cause implements github.com/pkg/errors.causer interface.
+func (err *errWithKeyvals) Cause() error {
+	return err.err
+}
+
+func unwrap(err error) (keyvals []interface{}) {
+	type causer interface {
+		Cause() error
+	}
+	for err != nil {
+		switch errWith := err.(type) {
+		case *errWithKeyvals:
+			keyvals = append(errWith.keyvals, keyvals...)
+			err = errWith.Cause()
+		case causer:
+			err = errWith.Cause()
+		default:
+			err = nil
+		}
+	}
+	return keyvals
+}
+
+// WrapErr returns given err wrapped with keyvals. If returned err will be
+// logged later these keyvals will be included in output.
+func (l *Logger) WrapErr(err error, keyvals ...interface{}) error {
+	if len(keyvals)%2 != 0 {
+		l.New().AddCallDepth(getPackageDepth()).PrintErr("odd keyvals")
+		keyvals = append(keyvals, MissingValue)
+	}
+
+	return &errWithKeyvals{
+		err:     err,
+		keyvals: keyvals,
+	}
+}
