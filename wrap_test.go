@@ -19,6 +19,8 @@ func TestWrapErr(tt *testing.T) {
 	err = log.WrapErr(err, "a", 12, "d", 40)
 	log.Warn("hmm", "c", 31, "e", 50, "err", err)
 	t.Match(buf.String(), "`hmm` a=12 b=20 c=31 d=40 e=50 err=EOF")
+
+	t.Nil(log.WrapErr(nil, "a", 10))
 }
 
 func ExampleLogger_WrapErr() {
