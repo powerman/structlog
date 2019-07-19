@@ -5,7 +5,7 @@ jobs:
         docker:
             - image: circleci/golang:1
         environment:
-            GOLANGCI_LINT_VER: 1.15.0
+            GOLANGCI_LINT_VER: 1.17.1
         steps:
             - checkout
             - run:
