@@ -15,16 +15,20 @@ func (err *errWithKeyvals) Cause() error {
 	return err.err
 }
 
+// Unwrap implements interface used by errors.Unwrap.
+func (err *errWithKeyvals) Unwrap() error {
+	return err.err
+}
+
 func unwrap(err error) (keyvals []interface{}) {
-	type causer interface {
-		Cause() error
-	}
 	for err != nil {
 		switch errWith := err.(type) {
 		case *errWithKeyvals:
 			keyvals = append(errWith.keyvals, keyvals...)
-			err = errWith.Cause()
-		case causer:
+			err = errWith.Unwrap()
+		case interface{ Unwrap() error }:
+			err = errWith.Unwrap()
+		case interface{ Cause() error }:
 			err = errWith.Cause()
 		default:
 			err = nil

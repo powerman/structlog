@@ -2,6 +2,7 @@ package structlog_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -40,6 +41,7 @@ func ExampleLogger_WrapErr() {
 	}
 	middleLevelFunc := func(action string) error {
 		if err := lowLevelFunc(); err != nil {
+			err = fmt.Errorf("lowLevelFunc: %w", err)
 			return log.WrapErr(err, "action", action)
 		}
 		return nil
@@ -51,5 +53,5 @@ func ExampleLogger_WrapErr() {
 	}
 	topLevelFunc()
 	// Output:
-	// WRN `log only at top level` details=about error action=doit err=EOF
+	// WRN `log only at top level` details=about error action=doit err=lowLevelFunc: EOF
 }
