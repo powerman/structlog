@@ -608,7 +608,7 @@ func (l *Logger) Panicln(v ...interface{}) {
 	panic(s)
 }
 
-func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { // nolint:gocyclo
+func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { // nolint:gocyclo,funlen,gocognit
 	l.RLock()
 	defer l.RUnlock()
 	if l.parent != nil {
