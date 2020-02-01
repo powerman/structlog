@@ -276,11 +276,6 @@ issues:
       linters:
         - gocritic
 
-    # Package def is designed to contain global constants.
-    - path: internal/def/
-      linters:
-        - gochecknoglobals
-
     # Commands are allowed to contain a lot of flags.
     - path: main.go
       text: Function '(init|main)'
