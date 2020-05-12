@@ -139,11 +139,11 @@ var (
 		KeyApp, path.Base(os.Args[0]),
 		KeyPID, os.Getpid(),
 	).SetPrefixKeys(
-		KeyApp, KeyPID, KeyLevel, KeyUnit,
+		KeyTime, KeyApp, KeyPID, KeyLevel, KeyUnit,
 	).SetSuffixKeys(
 		KeyFunc, KeySource, KeyStack,
 	).SetKeysFormat(map[string]string{
-		KeyTime:    "%[2]s",
+		KeyTime:    "%[2]s ",
 		KeyApp:     "%[2]s",
 		KeyPID:     "[%[2]d]",
 		KeyLevel:   " %[2]s",
