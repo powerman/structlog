@@ -1,4 +1,5 @@
-# structlog [![GoDoc](https://godoc.org/github.com/powerman/structlog?status.svg)](http://godoc.org/github.com/powerman/structlog) [![CircleCI](https://circleci.com/gh/powerman/structlog.svg?style=svg)](https://circleci.com/gh/powerman/structlog) [![Coverage Status](https://coveralls.io/repos/powerman/structlog/badge.svg?branch=master&service=github)](https://coveralls.io/github/powerman/structlog?branch=master)
+# structlog
+[![GoDoc](https://godoc.org/github.com/powerman/structlog?status.svg)](http://godoc.org/github.com/powerman/structlog) [![Go Report Card](https://goreportcard.com/badge/github.com/powerman/structlog)](https://goreportcard.com/report/github.com/powerman/structlog) [![CircleCI](https://circleci.com/gh/powerman/structlog.svg?style=svg)](https://circleci.com/gh/powerman/structlog) [![Coverage Status](https://coveralls.io/repos/powerman/structlog/badge.svg?branch=master&service=github)](https://coveralls.io/github/powerman/structlog?branch=master)
 
 ## Features
 

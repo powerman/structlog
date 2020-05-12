@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // Reset defaults once.
 	log.SetFlags(0)
 }
 
@@ -79,7 +79,7 @@ type PrinterFunc func(v ...interface{})
 func (f PrinterFunc) Print(v ...interface{}) { f(v...) }
 
 // ParseLevel convert levelName from flag or config file into logLevel.
-func ParseLevel(levelName string) logLevel { // nolint:golint
+func ParseLevel(levelName string) logLevel { //nolint:golint // Intentionally return unexported.
 	switch strings.ToLower(levelName) {
 	case "err", "error", "fatal", "crit", "critical", "alert", "emerg", "emergency":
 		return ERR
@@ -135,7 +135,7 @@ var (
 	// DefaultLogger provides sane defaults inherited by new logger
 	// objects created with New(). Feel free to change it settings
 	// when your app start.
-	DefaultLogger = NewZeroLogger( //nolint:gochecknoglobals
+	DefaultLogger = NewZeroLogger( //nolint:gochecknoglobals // By design.
 		KeyApp, path.Base(os.Args[0]),
 		KeyPID, os.Getpid(),
 	).SetPrefixKeys(
@@ -171,7 +171,7 @@ func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
 		keyValFormat:  &keyValFormat,
 		timeFormat:    &timeFormat,
 		timeValFormat: &timeValFormat,
-		callDepth:     2, // public method like Err() or Recover() plus l.log()
+		callDepth:     2, //nolint:gomnd // Public method like Err() or Recover() plus l.log().
 		defaultKeyvals: map[string]interface{}{
 			KeyUnit:   Auto,    // must be non-nil to enable field
 			KeyFunc:   unknown, // must be non-nil to enable field
@@ -608,7 +608,7 @@ func (l *Logger) Panicln(v ...interface{}) {
 	panic(s)
 }
 
-func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { // nolint:gocyclo,funlen,gocognit
+func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { //nolint:gocyclo,gocognit,funlen // TODO Simplify.
 	l.RLock()
 	defer l.RUnlock()
 	if l.parent != nil {
@@ -637,8 +637,8 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	vals := make(map[string]interface{}, len(l.prefixKeys)+len(keyvals)/2+len(l.suffixKeys)+extraKeys)
 	prefixFormat := make([]string, 0, len(l.prefixKeys))
 	suffixFormat := make([]string, 0, len(l.suffixKeys))
-	middleFormat := make([]string, 0, len(keyvals)/2)
-	middleKeys := make([]string, 0, len(keyvals)/2)
+	middleFormat := make([]string, 0, len(keyvals)/2) //nolint:gomnd // Half.
+	middleKeys := make([]string, 0, len(keyvals)/2)   //nolint:gomnd // Half.
 	values := make([]interface{}, 0, len(vals))
 	surroundKeys := make(map[string]bool, len(l.prefixKeys)+len(l.suffixKeys))
 
@@ -769,7 +769,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 //   prefixKeys:     prepend parent's keys (XXX no ease way to replace!)
 //   suffixKeys:     append  parent's keys (XXX no ease way to replace!)
 //   keysFormat:     use parent only by default (set to DefaultKeyValFormat to drop parent's value)
-func (l *Logger) mergeParent() { // nolint:gocyclo
+func (l *Logger) mergeParent() {
 	// Handle recursive calls, like in case "key is not string".
 	l.RLock()
 	if l.parent == nil {
@@ -839,7 +839,7 @@ func getPackageDepth() int {
 	callerPkg, _ := path.Split(callerFile)
 	for depth := 0; ok; depth++ {
 		var nextFile string
-		_, nextFile, _, ok = runtime.Caller(2 + depth)
+		_, nextFile, _, ok = runtime.Caller(1 + 1 + depth)
 		nextPkg, _ := path.Split(nextFile)
 		if callerPkg != nextPkg {
 			return depth

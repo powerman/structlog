@@ -14,7 +14,8 @@ func NewContext(ctx context.Context, log *Logger) context.Context {
 // FromContext returns the Logger value stored in ctx or defaultLog or
 // New() if defaultLog is nil.
 func FromContext(ctx context.Context, defaultLog *Logger) *Logger {
-	switch log, _ := ctx.Value(contextKeyLog).(*Logger); true {
+	log, _ := ctx.Value(contextKeyLog).(*Logger)
+	switch {
 	case log != nil:
 		return log
 	case defaultLog != nil:
