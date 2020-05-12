@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-    test:
+    build:
         docker:
             - image: cimg/go:1.14
               environment:
