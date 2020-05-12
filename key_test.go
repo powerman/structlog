@@ -16,7 +16,7 @@ func TestDefault(tt *testing.T) {
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf)
 	log.Debug("defaults")
-	t.Equal(buf.String(), "structlog.test["+pid+"] dbg structlog: `defaults` \t@ structlog_test.TestDefault(key_test.go:18)\n")
+	t.Equal(buf.String(), "structlog.test["+pid+"] dbg "+unit+": `defaults` \t@ structlog_test.TestDefault(key_test.go:18)\n")
 }
 
 func TestDefaultJSON(tt *testing.T) {
@@ -35,7 +35,7 @@ func TestDefaultJSON(tt *testing.T) {
 		"_p": float64(os.Getpid()),
 		"_s": "key_test.go:27",
 		"_t": "Jan  2 02:04:05.123456",
-		"_u": "structlog",
+		"_u": unit,
 	})
 }
 
