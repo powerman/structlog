@@ -59,9 +59,9 @@ const (
 	KeyStack   = "__" // Key name used to output multiline stack trace.
 )
 
-// Auto can be used as value for KeyUnit and KeyStack to automatically
-// generate their values: caller package's directory name and full stack
-// of the current goroutine.
+// Auto can be used as value for KeyTime, KeyUnit and KeyStack to
+// automatically generate their values: current time, caller package's
+// directory name and full stack of the current goroutine.
 const Auto = "\x00"
 
 const unknown = "???"
@@ -143,6 +143,7 @@ var (
 	).SetSuffixKeys(
 		KeyFunc, KeySource, KeyStack,
 	).SetKeysFormat(map[string]string{
+		KeyTime:    "%[2]s",
 		KeyApp:     "%[2]s",
 		KeyPID:     "[%[2]d]",
 		KeyLevel:   " %[2]s",
@@ -608,6 +609,8 @@ func (l *Logger) Panicln(v ...interface{}) {
 	panic(s)
 }
 
+var now = time.Now //nolint:gochecknoglobals // For tests.
+
 func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { //nolint:gocyclo,gocognit,funlen // TODO Simplify.
 	l.RLock()
 	defer l.RUnlock()
@@ -686,7 +689,9 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	}
 	// 5. Add current time if output format is JSON.
 	if *l.format == JSON {
-		vals[KeyTime] = time.Now().UTC().Format(*l.timeFormat)
+		vals[KeyTime] = now().UTC().Format(*l.timeFormat)
+	} else if vals[KeyTime] == Auto {
+		vals[KeyTime] = now().Format(*l.timeFormat)
 	}
 	// 6. Add log level.
 	vals[KeyLevel] = level
