@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/powerman/check"
+
 	"github.com/powerman/structlog"
 )
 
@@ -15,12 +16,13 @@ func TestDefault(tt *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf)
-	log.Debug("defaults")
+	_, err := os.Open("/no/such")
+	log.Debug(err)
 	log.SetDefaultKeyvals(structlog.KeyTime, structlog.Auto)
 	log.Info("with time")
 	t.Equal(buf.String(), ""+
-		"structlog.test["+pid+"] dbg "+unit+": `defaults` \t@ structlog_test.TestDefault(key_test.go:18)\n"+
-		"Jan  2 03:04:05.123456 structlog.test["+pid+"] inf "+unit+": `with time` \t@ structlog_test.TestDefault(key_test.go:20)\n")
+		"structlog.test["+pid+"] dbg "+unit+": `open /no/such: no such file or directory` \t@ structlog_test.TestDefault(key_test.go:20)\n"+
+		"Jan  2 03:04:05.123456 structlog.test["+pid+"] inf "+unit+": `with time` \t@ structlog_test.TestDefault(key_test.go:22)\n")
 }
 
 func TestDefaultJSON(tt *testing.T) {
@@ -28,16 +30,17 @@ func TestDefaultJSON(tt *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf).SetLogFormat(structlog.JSON)
-	log.Debug("defaults")
+	_, err := os.Open("/no/such")
+	log.Debug(err)
 	m := make(map[string]interface{})
 	t.Nil(json.Unmarshal(buf.Bytes(), &m))
 	t.DeepEqual(m, map[string]interface{}{
 		"_a": "structlog.test",
 		"_f": "structlog_test.TestDefaultJSON",
 		"_l": "dbg",
-		"_m": "defaults",
+		"_m": "open /no/such: no such file or directory",
 		"_p": float64(os.Getpid()),
-		"_s": "key_test.go:31",
+		"_s": "key_test.go:34",
 		"_t": "Jan  2 02:04:05.123456",
 		"_u": unit,
 	})

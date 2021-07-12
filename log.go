@@ -131,29 +131,27 @@ type Logger struct {
 	sync.RWMutex
 }
 
-var (
-	// DefaultLogger provides sane defaults inherited by new logger
-	// objects created with New(). Feel free to change it settings
-	// when your app start.
-	DefaultLogger = NewZeroLogger( //nolint:gochecknoglobals // By design.
-		KeyApp, path.Base(os.Args[0]),
-		KeyPID, os.Getpid(),
-	).SetPrefixKeys(
-		KeyTime, KeyApp, KeyPID, KeyLevel, KeyUnit,
-	).SetSuffixKeys(
-		KeyFunc, KeySource, KeyStack,
-	).SetKeysFormat(map[string]string{
-		KeyTime:    "%[2]s ",
-		KeyApp:     "%[2]s",
-		KeyPID:     "[%[2]d]",
-		KeyLevel:   " %[2]s",
-		KeyUnit:    " %[2]s:",
-		KeyMessage: " %#[2]q",
-		KeyFunc:    " \t@ %[2]s",
-		KeySource:  "(%[2]s)",
-		KeyStack:   "\n%[2]s",
-	})
-)
+// DefaultLogger provides sane defaults inherited by new logger
+// objects created with New(). Feel free to change it settings
+// when your app start.
+var DefaultLogger = NewZeroLogger( //nolint:gochecknoglobals // By design.
+	KeyApp, path.Base(os.Args[0]),
+	KeyPID, os.Getpid(),
+).SetPrefixKeys(
+	KeyTime, KeyApp, KeyPID, KeyLevel, KeyUnit,
+).SetSuffixKeys(
+	KeyFunc, KeySource, KeyStack,
+).SetKeysFormat(map[string]string{
+	KeyTime:    "%[2]s ",
+	KeyApp:     "%[2]s",
+	KeyPID:     "[%[2]d]",
+	KeyLevel:   " %[2]s",
+	KeyUnit:    " %[2]s:",
+	KeyMessage: " %#[2]q",
+	KeyFunc:    " \t@ %[2]s",
+	KeySource:  "(%[2]s)",
+	KeyStack:   "\n%[2]s",
+})
 
 // NewZeroLogger creates and returns a new logger with empty settings.
 func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
@@ -665,7 +663,11 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	// 3. Add msg to middleKeys. Msg value may be nil.
 	middleKeys = append(middleKeys, KeyMessage)
 	middleFormat = append(middleFormat, l.getFormat(KeyMessage))
-	vals[KeyMessage] = msg
+	if *l.format == JSON {
+		vals[KeyMessage] = fmt.Sprint(msg) // Avoid marshalling non-string in msg.
+	} else {
+		vals[KeyMessage] = msg
+	}
 	// 4. Add keyvals to prefixKeys/middleKeys/suffixKeys.
 	//    May overwrite prefixKeys/suffixKeys values from defaultKeyvals.
 	//    May have nil values.
