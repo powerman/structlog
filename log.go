@@ -635,7 +635,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	// TODO Pre-calculate surroundKeys/prefixFormat/suffixFormat in
 	// places where prefixKeys/suffixKeys may change.
 	const extraKeys = 7 // KeyMessage, KeyTime, KeyLevel, KeyUnit, KeyFunc, KeySource, KeyStack
-	vals := make(map[string]interface{}, len(l.prefixKeys)+len(keyvals)/2+len(l.suffixKeys)+extraKeys)
+	vals := make(kvs, len(l.prefixKeys)+len(keyvals)/2+len(l.suffixKeys)+extraKeys)
 	prefixFormat := make([]string, 0, len(l.prefixKeys))
 	suffixFormat := make([]string, 0, len(l.suffixKeys))
 	middleFormat := make([]string, 0, len(keyvals)/2) //nolint:gomnd // Half.
