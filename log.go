@@ -193,13 +193,14 @@ func (l *Logger) New(defaultKeyvals ...interface{}) *Logger {
 	if l == nil {
 		panic("New called on nil *Logger")
 	}
+	const sizeHint = 16
 	return (&Logger{
 		parent:         l,
 		callDepth:      0,
-		defaultKeyvals: make(map[string]interface{}, 16),
-		prefixKeys:     make([]string, 0, 16),
-		suffixKeys:     make([]string, 0, 16),
-		keysFormat:     make(map[string]string, 16),
+		defaultKeyvals: make(map[string]interface{}, sizeHint),
+		prefixKeys:     make([]string, 0, sizeHint),
+		suffixKeys:     make([]string, 0, sizeHint),
+		keysFormat:     make(map[string]string, sizeHint),
 	}).SetDefaultKeyvals(defaultKeyvals...)
 }
 
@@ -447,35 +448,38 @@ func (l *Logger) IsDebug() bool {
 // trace and level ERR plus stores value returned by recover() into err if
 // err is not nil.
 //
-//   defer log.Recover(nil)
-//   func PanicToErr() (err error) { defer log.Recover(&err); ... }
-func (l *Logger) Recover(err *error, keyvals ...interface{}) { //nolint:gocritic
-	if e := recover(); e != nil {
-		if err != nil {
-			var ok bool
-			if *err, ok = e.(error); !ok {
-				*err = fmt.Errorf("%v", e)
-			}
-		}
-
-		runtimeDepth := 1 // there are at least one call to runtime.gopanic
-		var pcs [8]uintptr
-		frames := runtime.CallersFrames(pcs[:runtime.Callers(1+runtimeDepth+1, pcs[:])])
-		for ; ; runtimeDepth++ {
-			frame, more := frames.Next()
-			if !more || !strings.HasPrefix(frame.Function, "runtime.") {
-				break
-			}
-		}
-
-		l.New().AddCallDepth(runtimeDepth).log(ERR, e, append(keyvals, KeyStack, Auto)...)
+//	defer log.Recover(nil)
+//	func PanicToErr() (err error) { defer log.Recover(&err); ... }
+func (l *Logger) Recover(err *error, keyvals ...interface{}) { //nolint:gocritic // By design.
+	e := recover() //nolint:revive // By design.
+	if e == nil {
+		return
 	}
+
+	if err != nil {
+		var ok bool
+		if *err, ok = e.(error); !ok {
+			*err = fmt.Errorf("%v", e) //nolint:goerr113 // By design.
+		}
+	}
+
+	runtimeDepth := 1 // there are at least one call to runtime.gopanic
+	var pcs [8]uintptr
+	frames := runtime.CallersFrames(pcs[:runtime.Callers(1+runtimeDepth+1, pcs[:])])
+	for ; ; runtimeDepth++ {
+		frame, more := frames.Next()
+		if !more || !strings.HasPrefix(frame.Function, "runtime.") {
+			break
+		}
+	}
+
+	l.New().AddCallDepth(runtimeDepth).log(ERR, e, append(keyvals, KeyStack, Auto)...)
 }
 
 // ErrIfFail will run f and log defaultKeyvals, returned error and
 // keyvals with level ERR if returned error is not nil.
 //
-//   defer log.ErrIfFail(file.Close)
+//	defer log.ErrIfFail(file.Close)
 func (l *Logger) ErrIfFail(f func() error, keyvals ...interface{}) {
 	if err := f(); err != nil {
 		l.log(ERR, err, keyvals...)
@@ -485,7 +489,7 @@ func (l *Logger) ErrIfFail(f func() error, keyvals ...interface{}) {
 // WarnIfFail will run f and log defaultKeyvals, returned error and
 // keyvals with level WRN if returned error is not nil.
 //
-//   defer log.WarnIfFail(file.Close)
+//	defer log.WarnIfFail(file.Close)
 func (l *Logger) WarnIfFail(f func() error, keyvals ...interface{}) {
 	if err := f(); err != nil {
 		l.log(WRN, err, keyvals...)
@@ -495,7 +499,7 @@ func (l *Logger) WarnIfFail(f func() error, keyvals ...interface{}) {
 // InfoIfFail will run f and log defaultKeyvals, returned error and
 // keyvals with level INF if returned error is not nil.
 //
-//   defer log.InfoIfFail(file.Close)
+//	defer log.InfoIfFail(file.Close)
 func (l *Logger) InfoIfFail(f func() error, keyvals ...interface{}) {
 	if err := f(); err != nil {
 		l.log(INF, err, keyvals...)
@@ -505,7 +509,7 @@ func (l *Logger) InfoIfFail(f func() error, keyvals ...interface{}) {
 // DebugIfFail will run f and log defaultKeyvals, returned error and
 // keyvals with level DBG if returned error is not nil.
 //
-//   defer log.DebugIfFail(file.Close)
+//	defer log.DebugIfFail(file.Close)
 func (l *Logger) DebugIfFail(f func() error, keyvals ...interface{}) {
 	if err := f(); err != nil {
 		l.log(DBG, err, keyvals...)
@@ -522,8 +526,8 @@ func (l *Logger) PrintErr(msg interface{}, keyvals ...interface{}) {
 // Err log defaultKeyvals, msg and keyvals with level ERR and returns
 // first arg of error type or msg if there are no errors in args.
 //
-//   return log.Err("message to log", "error to log and return", err)
-//   return log.Err(errors.New("error to log and return"), "error to log", err)
+//	return log.Err("message to log", "error to log and return", err)
+//	return log.Err(errors.New("error to log and return"), "error to log", err)
 func (l *Logger) Err(msg interface{}, keyvals ...interface{}) error {
 	l.log(ERR, msg, keyvals...)
 	return getErr(msg, keyvals...)
@@ -566,21 +570,21 @@ func (l *Logger) Println(v ...interface{}) {
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Fatal(v ...interface{}) {
 	l.log(ERR, fmt.Sprint(v...))
-	os.Exit(1)
+	os.Exit(1) //nolint:revive // By design.
 }
 
 // Fatalf works like log.Fatalf. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Fatalf(format string, v ...interface{}) {
 	l.log(ERR, fmt.Sprintf(format, v...))
-	os.Exit(1)
+	os.Exit(1) //nolint:revive // By design.
 }
 
 // Fatalln works like log.Fatalln. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Fatalln(v ...interface{}) {
 	l.log(ERR, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
-	os.Exit(1)
+	os.Exit(1) //nolint:revive // By design.
 }
 
 // Panic works like log.Panic. Use level ERR.
@@ -683,7 +687,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 			middleKeys = append(middleKeys, k)
 			middleFormat = append(middleFormat, l.getFormat(k))
 		}
-		if t, ok := keyvals[i+1].(time.Time); ok {
+		if t, ok2 := keyvals[i+1].(time.Time); ok2 {
 			vals[k] = t.Format(*l.timeValFormat)
 		} else {
 			vals[k] = keyvals[i+1]
@@ -703,7 +707,7 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	// 8. Add func and source unless user set them to nil.
 	_, okFunc := vals[KeyFunc]
 	_, okSource := vals[KeySource]
-	if okUnit && unit == Auto || okSource || okFunc {
+	if okUnit && unit == Auto || okSource || okFunc { //nolint:nestif // No idea how to improve.
 		if pc, filepath, line, ok := runtime.Caller(l.callDepth); ok {
 			dir, file := path.Split(filepath)
 			if okUnit && unit == Auto {
@@ -765,17 +769,17 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 // DefaultLogger to package-global log vars in other packages, if they
 // didn't already used log within init().
 //
-//   printer:        use parent only by default
-//   format:         use parent only by default
-//   level:          use parent only by default
-//   keyValFormat:   use parent only by default
-//   timeFormat:     use parent only by default
-//   timeValFormat:  use parent only by default
-//   callDepth:      add parent's
-//   defaultKeyvals: use parent only by default (set key to nil to drop parent's value)
-//   prefixKeys:     prepend parent's keys (XXX no ease way to replace!)
-//   suffixKeys:     append  parent's keys (XXX no ease way to replace!)
-//   keysFormat:     use parent only by default (set to DefaultKeyValFormat to drop parent's value)
+//	printer:        use parent only by default
+//	format:         use parent only by default
+//	level:          use parent only by default
+//	keyValFormat:   use parent only by default
+//	timeFormat:     use parent only by default
+//	timeValFormat:  use parent only by default
+//	callDepth:      add parent's
+//	defaultKeyvals: use parent only by default (set key to nil to drop parent's value)
+//	prefixKeys:     prepend parent's keys (XXX no ease way to replace!)
+//	suffixKeys:     append  parent's keys (XXX no ease way to replace!)
+//	keysFormat:     use parent only by default (set to DefaultKeyValFormat to drop parent's value)
 func (l *Logger) mergeParent() {
 	// Handle recursive calls, like in case "key is not string".
 	l.RLock()
@@ -865,5 +869,5 @@ func getErr(msg interface{}, keyvals ...interface{}) error {
 			return err
 		}
 	}
-	return fmt.Errorf("%s", msg)
+	return fmt.Errorf("%s", msg) //nolint:goerr113 // By design.
 }

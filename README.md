@@ -1,5 +1,10 @@
 # structlog
-[![GoDoc](https://godoc.org/github.com/powerman/structlog?status.svg)](http://godoc.org/github.com/powerman/structlog) [![Go Report Card](https://goreportcard.com/badge/github.com/powerman/structlog)](https://goreportcard.com/report/github.com/powerman/structlog) [![CircleCI](https://circleci.com/gh/powerman/structlog.svg?style=svg)](https://circleci.com/gh/powerman/structlog) [![Coverage Status](https://coveralls.io/repos/powerman/structlog/badge.svg?branch=master&service=github)](https://coveralls.io/github/powerman/structlog?branch=master)
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/powerman/structlog.svg)](https://pkg.go.dev/github.com/powerman/structlog)
+[![CI/CD](https://github.com/powerman/structlog/workflows/CI/CD/badge.svg?event=push)](https://github.com/powerman/structlog/actions?query=workflow%3ACI%2FCD)
+[![Coverage Status](https://coveralls.io/repos/github/powerman/structlog/badge.svg?branch=master)](https://coveralls.io/github/powerman/structlog?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/powerman/structlog)](https://goreportcard.com/report/github.com/powerman/structlog)
+[![Release](https://img.shields.io/github/v/release/powerman/structlog)](https://github.com/powerman/structlog/releases/latest)
 
 ## Features
 

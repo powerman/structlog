@@ -1,0 +1,65 @@
+name: CI/CD
+
+on:
+  push:
+    branches: master
+    tags: v*
+  pull_request:
+    branches: master
+  schedule:
+    - cron: '0 12 * * 6'
+
+jobs:
+
+  test:
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        go:
+          - '^1.16'
+          - '^1.17'
+          - '^1.18'
+          - '^1.19'
+#           - 'tip'
+
+    steps:
+      - uses: actions/setup-go@v3
+        if: matrix.go != 'tip'
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Install Go tip
+        if: matrix.go == 'tip'
+        run: |
+          mkdir "$HOME/gotip"
+          curl -sL https://storage.googleapis.com/go-build-snap/go/linux-amd64/$(git ls-remote https://github.com/golang/go.git HEAD | awk '{print $1}').tar.gz -o - | tar -C "$HOME/gotip" -xzf -
+          echo "GOROOT=$HOME/gotip" >> $GITHUB_ENV
+          echo "$HOME/gotip/bin" >> $GITHUB_PATH
+
+      - run: go version
+
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/bin
+            ~/go/pkg
+            ~/go/src
+            ~/.cache/go-build
+            ~/.cache/golangci-lint
+            .buildcache
+          key: v3-test-${{ runner.os }}-${{ hashFiles('go.mod') }}
+          restore-keys: |
+            v3-test-${{ runner.os }}-
+
+      - run: go generate
+      - run: .buildcache/bin/golangci-lint run
+      - run: go test -race ./...
+
+      - name: Report code coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+        if: env.COVERALLS_TOKEN
+        run: .buildcache/bin/goveralls -service=GitHub

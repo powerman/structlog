@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/powerman/check"
+
 	"github.com/powerman/structlog"
 )
 
@@ -24,8 +25,8 @@ func TestDefaultPrinter(tt *testing.T) {
 	log.Info("something happens", "k1", "v1", "k2", "v2")
 	log.Warn("oops")
 	t.Equal(buf.String(), ""+
-		"structlog.test["+pid+"] inf "+unit+": `something happens` k1=v1 k2=v2 \t@ structlog_test.TestDefaultPrinter(output_test.go:24)\n"+
-		"structlog.test["+pid+"] WRN "+unit+": `oops` \t@ structlog_test.TestDefaultPrinter(output_test.go:25)\n")
+		"structlog.test["+pid+"] inf "+unit+": `something happens` k1=v1 k2=v2 \t@ structlog_test.TestDefaultPrinter(output_test.go:25)\n"+
+		"structlog.test["+pid+"] WRN "+unit+": `oops` \t@ structlog_test.TestDefaultPrinter(output_test.go:26)\n")
 }
 
 func TestPrinter(tt *testing.T) {
@@ -35,8 +36,8 @@ func TestPrinter(tt *testing.T) {
 	log.Info("something happens", "k1", "v1", "k2", "v2")
 	log.Warn("oops")
 	t.Equal(buf.String(), ""+
-		"structlog.test["+pid+"] inf "+unit+": `something happens` k1=v1 k2=v2 \t@ structlog_test.TestPrinter(output_test.go:35)\n"+
-		"structlog.test["+pid+"] WRN "+unit+": `oops` \t@ structlog_test.TestPrinter(output_test.go:36)\n")
+		"structlog.test["+pid+"] inf "+unit+": `something happens` k1=v1 k2=v2 \t@ structlog_test.TestPrinter(output_test.go:36)\n"+
+		"structlog.test["+pid+"] WRN "+unit+": `oops` \t@ structlog_test.TestPrinter(output_test.go:37)\n")
 }
 
 func TestOutput(tt *testing.T) {
@@ -46,6 +47,6 @@ func TestOutput(tt *testing.T) {
 	log.Info("something happens", "k1", "v1", "k2", "v2")
 	log.Warn("oops")
 	t.Equal(buf.String(), ""+
-		"structlog.test["+pid+"] inf "+unit+": `something happens` k1=v1 k2=v2 \t@ structlog_test.TestOutput(output_test.go:46)\n"+
-		"structlog.test["+pid+"] WRN "+unit+": `oops` \t@ structlog_test.TestOutput(output_test.go:47)\n")
+		"structlog.test["+pid+"] inf "+unit+": `something happens` k1=v1 k2=v2 \t@ structlog_test.TestOutput(output_test.go:47)\n"+
+		"structlog.test["+pid+"] WRN "+unit+": `oops` \t@ structlog_test.TestOutput(output_test.go:48)\n")
 }
