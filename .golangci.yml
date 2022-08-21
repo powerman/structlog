@@ -11,7 +11,7 @@ run:
 
   # Timeout for analysis, e.g. 30s, 5m.
   # Default: 1m
-  #timeout: 5m
+  timeout: 5m
 
   # Exit code when at least one issue was found.
   # Default: 1
@@ -435,6 +435,7 @@ linters-settings:
       - yodaStyleExpr    # questionable
       # XXX TEMPORARY Work around generics https://github.com/go-critic/go-critic/issues/1193#issuecomment-1077631484
       - typeDefFirst
+      - rangeValCopy
 
     # Enable multiple checks by tags, run `GL_DEBUG=gocritic golangci-lint run` to see all tags and checks.
     # See https://github.com/go-critic/go-critic#usage -> section "Tags".
@@ -582,7 +583,7 @@ linters-settings:
     # Select the Go version to target.
     # Default: "1.15"
     # Deprecated: use the global `run.go` instead.
-    lang-version: "1.18"
+    #lang-version: "1.18"
 
     # Module path which contains the source code being formatted.
     # Default: ""
@@ -1841,6 +1842,9 @@ issues:
     - "declaration of \"(log|err|ctx)\" shadows"
     - "missing cases in switch of type \\S+: \\S+_UNSPECIFIED$"
     # - "Potential file inclusion via variable" # [DEFAULT] gosec: False positive is triggered by 'src, err := ioutil.ReadFile(filename)'
+    # XXX TEMPORARY Work around generics https://github.com/go-critic/go-critic/issues/1193#issuecomment-1077631484
+    - "receiver-naming: receiver name \\S+ should be consistent with previous receiver name \\S+ for invalid-type"
+    - "//nolint:gocritic .* is unused for linter"
 
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:

@@ -20,7 +20,7 @@ jobs:
           - '^1.16'
           - '^1.17'
           - '^1.18'
-          - '^1.19'
+          - '^1.19' # Also used for goveralls.
 #           - 'tip'
 
     steps:
@@ -50,9 +50,9 @@ jobs:
             ~/.cache/go-build
             ~/.cache/golangci-lint
             .buildcache
-          key: v3-test-${{ runner.os }}-${{ hashFiles('go.mod') }}
+          key: v4-test-${{ runner.os }}-${{ hashFiles('go.mod') }}-${{ hashFiles('tools.go') }}
           restore-keys: |
-            v3-test-${{ runner.os }}-
+            v4-test-${{ runner.os }}-
 
       - run: go generate
       - run: .buildcache/bin/golangci-lint run
@@ -61,5 +61,5 @@ jobs:
       - name: Report code coverage
         env:
           COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-        if: env.COVERALLS_TOKEN
+        if: env.COVERALLS_TOKEN && matrix.go == '^1.19'
         run: .buildcache/bin/goveralls -service=GitHub
