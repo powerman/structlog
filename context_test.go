@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/powerman/check"
+
 	"github.com/powerman/structlog"
 )
 

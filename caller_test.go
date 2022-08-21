@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/powerman/check"
+
 	"github.com/powerman/structlog"
 )
 
@@ -33,14 +34,14 @@ func TestRecover(tt *testing.T) {
 		panic("oops")
 	}
 	testPanicAnon(log)
-	t.Match(buf.String(), `@ structlog_test.TestRecover.func1\(caller_test.go:33\)`)
+	t.Match(buf.String(), `@ structlog_test.TestRecover.func1\(caller_test.go:34\)`)
 	buf.Reset()
 	testPanic(log)
-	t.Match(buf.String(), `@ structlog_test.testPanic\(caller_test.go:13\)`)
+	t.Match(buf.String(), `@ structlog_test.testPanic\(caller_test.go:14\)`)
 	buf.Reset()
 	testPanicWrapper(log)
-	t.Match(buf.String(), `@ structlog_test.testPanic\(caller_test.go:13\)`)
+	t.Match(buf.String(), `@ structlog_test.testPanic\(caller_test.go:14\)`)
 	buf.Reset()
 	testPanicThinWrapper(log)
-	t.Match(buf.String(), `@ structlog_test.testPanic\(caller_test.go:13\)`)
+	t.Match(buf.String(), `@ structlog_test.testPanic\(caller_test.go:14\)`)
 }
