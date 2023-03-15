@@ -24,7 +24,7 @@ jobs:
 #           - 'tip'
 
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         if: matrix.go != 'tip'
         with:
           go-version: ${{ matrix.go }}
