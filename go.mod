@@ -2,7 +2,10 @@ module github.com/powerman/structlog
 
 go 1.18
 
-require github.com/powerman/check v1.6.0
+require (
+	github.com/mitchellh/panicwrap v1.0.0
+	github.com/powerman/check v1.6.0
+)
 
 require (
 	4d63.com/gochecknoglobals v0.0.0-20201008074935-acfc0b28355a // indirect
