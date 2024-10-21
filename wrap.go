@@ -1,29 +1,29 @@
 package structlog
 
-type errWithKeyvals struct {
+type keyvalsError struct {
 	err     error
-	keyvals []interface{}
+	keyvals []any
 }
 
 // Error implements error interface.
-func (err *errWithKeyvals) Error() string {
+func (err *keyvalsError) Error() string {
 	return err.err.Error()
 }
 
 // Cause implements github.com/pkg/errors.causer interface.
-func (err *errWithKeyvals) Cause() error {
+func (err *keyvalsError) Cause() error {
 	return err.err
 }
 
 // Unwrap implements interface used by errors.Unwrap.
-func (err *errWithKeyvals) Unwrap() error {
+func (err *keyvalsError) Unwrap() error {
 	return err.err
 }
 
-func unwrap(err error) (keyvals []interface{}) {
+func unwrap(err error) (keyvals []any) {
 	for err != nil {
-		switch errWith := err.(type) {
-		case *errWithKeyvals:
+		switch errWith := err.(type) { //nolint:errorlint // Needs to also support Cause.
+		case *keyvalsError:
 			keyvals = append(errWith.keyvals, keyvals...)
 			err = errWith.Unwrap()
 		case interface{ Unwrap() error }:
@@ -41,7 +41,7 @@ func unwrap(err error) (keyvals []interface{}) {
 // logged later these keyvals will be included in output.
 //
 // If called with nil error it'll return nil.
-func (l *Logger) WrapErr(err error, keyvals ...interface{}) error {
+func (l *Logger) WrapErr(err error, keyvals ...any) error {
 	if err == nil {
 		return nil
 	}
@@ -51,7 +51,7 @@ func (l *Logger) WrapErr(err error, keyvals ...interface{}) error {
 		keyvals = append(keyvals, MissingValue)
 	}
 
-	return &errWithKeyvals{
+	return &keyvalsError{
 		err:     err,
 		keyvals: keyvals,
 	}

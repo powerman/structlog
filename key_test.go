@@ -33,9 +33,9 @@ func TestDefaultJSON(tt *testing.T) {
 	log := structlog.New().SetOutput(&buf).SetLogFormat(structlog.JSON)
 	_, err := os.Open("/no/such")
 	log.Debug(err)
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	t.Nil(json.Unmarshal(buf.Bytes(), &m))
-	t.DeepEqual(m, map[string]interface{}{
+	t.DeepEqual(m, map[string]any{
 		"_a": "structlog.test",
 		"_f": "structlog_test.TestDefaultJSON",
 		"_l": "dbg",
@@ -69,9 +69,9 @@ func TestKeyTime(tt *testing.T) {
 	buf.Reset()
 	log.SetLogFormat(structlog.JSON)
 	log.Err("JSON")
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	t.Nil(json.Unmarshal(buf.Bytes(), &m))
-	t.DeepEqual(m, map[string]interface{}{
+	t.DeepEqual(m, map[string]any{
 		"_t": "02:04:05.123 UTC ",
 		"_l": "ERR",
 		"_m": "JSON",

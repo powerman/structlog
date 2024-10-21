@@ -18,7 +18,7 @@
 // usually in main(), and then you'll get simple and powerful logging as
 // promised above.
 //
-// Overview
+// # Overview
 //
 // It was designed to produce easy to read, vertically-aligned log lines
 // while your project is small, and later, when your project will grow to
@@ -34,10 +34,10 @@
 //   - Defining key/value output style using fmt.Sprintf 'verbs', including
 //     ability to output only value, without key name.
 //   - Choosing which ones of pre-defined key/values to include in output:
-//     - caller's package
-//     - caller's function name
-//     - caller's file and line
-//     - multiline stack trace (a-la panic output)
+//   - caller's package
+//   - caller's function name
+//   - caller's file and line
+//   - multiline stack trace (a-la panic output)
 //
 // Supported log levels: Err, Warn, Info and Debug.
 //
@@ -46,7 +46,7 @@
 // structlog's output goes at same place as logging from other packages
 // (which often use stdlib's log).
 //
-// Inheritance
+// # Inheritance
 //
 // For convenience you may have multiple loggers, and create new logger in
 // such a way to inherit all settings from existing logger. These settings
@@ -71,7 +71,7 @@
 // include remote IP and user ID in each log record - without needs to
 // manually include it in each line where you log something.
 //
-// Contents
+// # Contents
 //
 // ★ Creating a new logger:
 //
@@ -144,4 +144,6 @@
 //
 //	SetOutput
 //	SetPrinter
+//
+//nolint:godox // Allow "Debug".
 package structlog

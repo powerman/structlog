@@ -1,0 +1,54 @@
+name: CI/CD
+
+on:
+  push:
+    tags: [v*]
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+
+  test:
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        go:
+          - 'stable' # Also used for goveralls.
+          - 'oldstable'
+          - '^1.18'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          check-latest: true
+          cache: false
+
+      - run: go version
+
+      - uses: actions/cache@v4
+        id: cache-go-with-tools
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.cache/golangci-lint
+            .buildcache
+          key: v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('tools.go') }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('tools.go') }}-
+            v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-
+
+      - run: scripts/test
+
+      - name: Report code coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+        if: env.COVERALLS_TOKEN && matrix.go == 'stable'
+        run: |-
+          scripts/cover
+          .buildcache/bin/goveralls -coverprofile=.buildcache/cover.out -service=GitHub

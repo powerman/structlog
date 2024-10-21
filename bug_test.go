@@ -25,9 +25,9 @@ func TestJSONMarshalError(tt *testing.T) {
 	v := V{S: "text", I: 42}
 
 	log.Debug("msg", "v", v)
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	t.Nil(json.Unmarshal(buf.Bytes(), &m))
-	t.DeepEqual(m, map[string]interface{}{
+	t.DeepEqual(m, map[string]any{
 		"_a": "structlog.test",
 		"_f": "structlog_test.TestJSONMarshalError",
 		"_l": "dbg",
@@ -41,9 +41,9 @@ func TestJSONMarshalError(tt *testing.T) {
 
 	buf.Reset()
 	log.Debug(v)
-	m = make(map[string]interface{})
+	m = make(map[string]any)
 	t.Nil(json.Unmarshal(buf.Bytes(), &m))
-	t.DeepEqual(m, map[string]interface{}{
+	t.DeepEqual(m, map[string]any{
 		"_a": "structlog.test",
 		"_f": "structlog_test.TestJSONMarshalError",
 		"_l": "dbg",

@@ -10,9 +10,9 @@ import (
 )
 
 type deferredMsg struct {
-	method  func(*Logger, interface{}, ...interface{})
-	msg     interface{}
-	keyvals []interface{}
+	method  func(*Logger, any, ...any)
+	msg     any
+	keyvals []any
 }
 
 // DeferredLogger allows to defer logging until logger will be configured.
@@ -30,27 +30,27 @@ type deferredMsg struct {
 //
 // Typical usage example:
 //
-//   func main() {
-//       var deferLog structlog.DeferredLogger
-//       deferLog.WrapPanic(&panicwrap.WrapConfig{HidePanic: true})
+//	func main() {
+//	    var deferLog structlog.DeferredLogger
+//	    deferLog.WrapPanic(&panicwrap.WrapConfig{HidePanic: true})
 //
-//       err := someSetup()
-//       if err != nil {
-//           deferLog.Fatalf("failed to someSetup: %s", err) // Won't call os.Exit now!
-//       }
+//	    err := someSetup()
+//	    if err != nil {
+//	        deferLog.Fatalf("failed to someSetup: %s", err) // Won't call os.Exit now!
+//	    }
 //
-//       var logJSON = flag.Bool("log.json", false, "use JSON log format")
-//       flag.Parse()
-//       if *logJSON {
-//           structlog.DefaultLogger.SetLogFormat(structlog.JSON)
-//       }
+//	    var logJSON = flag.Bool("log.json", false, "use JSON log format")
+//	    flag.Parse()
+//	    if *logJSON {
+//	        structlog.DefaultLogger.SetLogFormat(structlog.JSON)
+//	    }
 //
-//       log := structlog.New()
-//       deferLog.Execute(log) // os.Exit will happens here if someSetup has failed or code below will panic.
-//       // Do not use deferLog below this point.
+//	    log := structlog.New()
+//	    deferLog.Execute(log) // os.Exit will happens here if someSetup has failed or code below will panic.
+//	    // Do not use deferLog below this point.
 //
-//       // ...
-//   }
+//	    // ...
+//	}
 type DeferredLogger struct {
 	mu          sync.Mutex
 	exited      bool // True if we should had exited with exitStatus.
@@ -146,7 +146,7 @@ func (d *DeferredLogger) Execute(log *Logger) {
 	d.exitFunc(d.exitStatus)
 }
 
-func (d *DeferredLogger) log(method func(*Logger, interface{}, ...interface{}), msg interface{}, keyvals ...interface{}) {
+func (d *DeferredLogger) log(method func(*Logger, any, ...any), msg any, keyvals ...any) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -177,63 +177,65 @@ func (d *DeferredLogger) fatal(msg string) {
 }
 
 // PrintErr defers logging until Execute will be called.
-func (d *DeferredLogger) PrintErr(msg interface{}, keyvals ...interface{}) {
+func (d *DeferredLogger) PrintErr(msg any, keyvals ...any) {
 	d.log((*Logger).PrintErr, msg, keyvals...)
 }
 
 // Err defers logging until Execute will be called.
-func (d *DeferredLogger) Err(msg interface{}, keyvals ...interface{}) error {
+func (d *DeferredLogger) Err(msg any, keyvals ...any) error {
 	d.log((*Logger).PrintErr, msg, keyvals...)
 	return getErr(msg, keyvals...)
 }
 
 // Warn defers logging until Execute will be called.
-func (d *DeferredLogger) Warn(msg interface{}, keyvals ...interface{}) {
+func (d *DeferredLogger) Warn(msg any, keyvals ...any) {
 	d.log((*Logger).Warn, msg, keyvals...)
 }
 
 // Info defers logging until Execute will be called.
-func (d *DeferredLogger) Info(msg interface{}, keyvals ...interface{}) {
+func (d *DeferredLogger) Info(msg any, keyvals ...any) {
 	d.log((*Logger).Info, msg, keyvals...)
 }
 
 // Debug defers logging until Execute will be called.
-func (d *DeferredLogger) Debug(msg interface{}, keyvals ...interface{}) {
+//
+//nolint:godox // False positive.
+func (d *DeferredLogger) Debug(msg any, keyvals ...any) {
 	d.log((*Logger).Debug, msg, keyvals...)
 }
 
 // Print defers logging until Execute will be called.
-func (d *DeferredLogger) Print(v ...interface{}) {
+func (d *DeferredLogger) Print(v ...any) {
 	d.log((*Logger).Info, fmt.Sprint(v...))
 }
 
 // Printf defers logging until Execute will be called.
-func (d *DeferredLogger) Printf(format string, v ...interface{}) {
+func (d *DeferredLogger) Printf(format string, v ...any) {
 	d.log((*Logger).Info, fmt.Sprintf(format, v...))
 }
 
 // Println defers logging until Execute will be called.
-func (d *DeferredLogger) Println(v ...interface{}) {
+func (d *DeferredLogger) Println(v ...any) {
 	d.log((*Logger).Info, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 }
 
 // Fatal defers logging until Execute will be called.
 //
 // WARNING: os.Exit won't be called until Execute, so execution of your code will continue.
-func (d *DeferredLogger) Fatal(v ...interface{}) {
+func (d *DeferredLogger) Fatal(v ...any) {
 	d.fatal(fmt.Sprint(v...))
 }
 
 // Fatalf defers logging until Execute will be called.
 //
 // WARNING: os.Exit won't be called until Execute, so execution of your code will continue.
-func (d *DeferredLogger) Fatalf(format string, v ...interface{}) {
+func (d *DeferredLogger) Fatalf(format string, v ...any) {
 	d.fatal(fmt.Sprintf(format, v...))
 }
 
 // Fatalln defers logging until Execute will be called.
 //
 // WARNING: os.Exit won't be called until Execute, so execution of your code will continue.
-func (d *DeferredLogger) Fatalln(v ...interface{}) {
+func (d *DeferredLogger) Fatalln(v ...any) {
 	d.fatal(strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 }

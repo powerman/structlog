@@ -1,3 +1,4 @@
+//nolint:testpackage // To set global "now" variable.
 package structlog
 
 import (
