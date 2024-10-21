@@ -144,4 +144,6 @@
 //
 //	SetOutput
 //	SetPrinter
+//
+//nolint:godox // Allow "Debug".
 package structlog

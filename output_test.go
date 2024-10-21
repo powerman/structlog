@@ -14,7 +14,7 @@ import (
 
 type bufPrinter struct{ bytes.Buffer }
 
-func (bp *bufPrinter) Print(v ...interface{}) { fmt.Fprint(&bp.Buffer, append(v, "\n")...) }
+func (bp *bufPrinter) Print(v ...any) { fmt.Fprint(&bp.Buffer, append(v, "\n")...) }
 
 func TestDefaultPrinter(tt *testing.T) {
 	t := check.T(tt)
