@@ -2,10 +2,10 @@ name: CI/CD
 
 on:
   push:
-    branches: master
-    tags: v*
+    tags: [v*]
+    branches: [master]
   pull_request:
-    branches: master
+    branches: [master]
   schedule:
     - cron: '0 12 * * 6'
 
@@ -17,49 +17,40 @@ jobs:
     strategy:
       matrix:
         go:
-          - '^1.16'
-          - '^1.17'
+          - 'stable' # Also used for goveralls.
+          - 'oldstable'
           - '^1.18'
-          - '^1.19' # Also used for goveralls.
-#           - 'tip'
 
     steps:
-      - uses: actions/setup-go@v3
-        if: matrix.go != 'tip'
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go }}
-
-      - name: Install Go tip
-        if: matrix.go == 'tip'
-        run: |
-          mkdir "$HOME/gotip"
-          curl -sL https://storage.googleapis.com/go-build-snap/go/linux-amd64/$(git ls-remote https://github.com/golang/go.git HEAD | awk '{print $1}').tar.gz -o - | tar -C "$HOME/gotip" -xzf -
-          echo "GOROOT=$HOME/gotip" >> $GITHUB_ENV
-          echo "$HOME/gotip/bin" >> $GITHUB_PATH
+          check-latest: true
+          cache: false
 
       - run: go version
 
-      - uses: actions/checkout@v3
-
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: cache-go-with-tools
         with:
           path: |
-            ~/go/bin
-            ~/go/pkg
-            ~/go/src
+            ~/go/pkg/mod
             ~/.cache/go-build
             ~/.cache/golangci-lint
             .buildcache
-          key: v4-test-${{ runner.os }}-${{ hashFiles('go.mod') }}-${{ hashFiles('tools.go') }}
+          key: v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('tools.go') }}-${{ hashFiles('go.sum') }}
           restore-keys: |
-            v4-test-${{ runner.os }}-
+            v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('tools.go') }}-
+            v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-
 
-      - run: go generate
-      - run: .buildcache/bin/golangci-lint run
-      - run: go test -race ./...
+      - run: scripts/test
 
       - name: Report code coverage
         env:
           COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-        if: env.COVERALLS_TOKEN && matrix.go == '^1.19'
-        run: .buildcache/bin/goveralls -service=GitHub
+        if: env.COVERALLS_TOKEN && matrix.go == 'stable'
+        run: |-
+          scripts/cover
+          .buildcache/bin/goveralls -coverprofile=.buildcache/cover.out -service=GitHub

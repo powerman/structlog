@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-type kvs map[string]interface{}
+type kvs map[string]any
 
 func (kv kvs) MarshalJSON() ([]byte, error) {
 	safe := make(map[string]string, len(kv))

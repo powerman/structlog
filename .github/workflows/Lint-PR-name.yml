@@ -2,8 +2,8 @@ name: Lint PR name
 
 on:
   pull_request:
-    branches: master
-    types: [ opened, edited, synchronize, reopened ]
+    branches: [master]
+    types: [opened, edited, synchronize, reopened]
 
 jobs:
 
@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: npm install @commitlint/config-conventional
+      - name: Install dependencies
+        run: npm install @commitlint/config-conventional@16.0.0
 
       - uses: JulienKode/pull-request-name-linter-action@v0.5.0
         with:

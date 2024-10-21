@@ -69,17 +69,17 @@ const unknown = "???"
 // Printer is an interface used to output log.
 type Printer interface {
 	// Print outputs v plus \n. Arguments are handled in the manner of fmt.Print.
-	Print(v ...interface{})
+	Print(v ...any)
 }
 
 // The PrinterFunc type is an adapter to allow the use of ordinary functions as Printer.
-type PrinterFunc func(v ...interface{})
+type PrinterFunc func(v ...any)
 
 // Print outputs v plus \n. Arguments are handled in the manner of fmt.Print.
-func (f PrinterFunc) Print(v ...interface{}) { f(v...) }
+func (f PrinterFunc) Print(v ...any) { f(v...) }
 
 // ParseLevel convert levelName from flag or config file into logLevel.
-func ParseLevel(levelName string) logLevel { //nolint:golint // Intentionally return unexported.
+func ParseLevel(levelName string) logLevel { //nolint:revive // Intentionally return unexported.
 	switch strings.ToLower(levelName) {
 	case "err", "error", "fatal", "crit", "critical", "alert", "emerg", "emergency":
 		return ERR
@@ -124,7 +124,7 @@ type Logger struct {
 	timeFormat     *string
 	timeValFormat  *string
 	callDepth      int
-	defaultKeyvals map[string]interface{}
+	defaultKeyvals map[string]any
 	prefixKeys     []string
 	suffixKeys     []string
 	keysFormat     map[string]string
@@ -154,7 +154,7 @@ var DefaultLogger = NewZeroLogger( //nolint:gochecknoglobals // By design.
 })
 
 // NewZeroLogger creates and returns a new logger with empty settings.
-func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
+func NewZeroLogger(defaultKeyvals ...any) *Logger {
 	var (
 		format        = DefaultLogFormat
 		level         = DefaultLogLevel
@@ -170,26 +170,26 @@ func NewZeroLogger(defaultKeyvals ...interface{}) *Logger {
 		keyValFormat:  &keyValFormat,
 		timeFormat:    &timeFormat,
 		timeValFormat: &timeValFormat,
-		callDepth:     2, //nolint:gomnd // Public method like Err() or Recover() plus l.log().
-		defaultKeyvals: map[string]interface{}{
+		callDepth:     2, //nolint:mnd // Public method like Err() or Recover() plus l.log().
+		defaultKeyvals: map[string]any{
 			KeyUnit:   Auto,    // must be non-nil to enable field
 			KeyFunc:   unknown, // must be non-nil to enable field
 			KeySource: unknown, // must be non-nil to enable field
 		},
 		prefixKeys: []string{},
 		suffixKeys: []string{},
-		keysFormat: map[string]string{},
+		keysFormat: make(map[string]string),
 	}).New(defaultKeyvals...)
 }
 
 // New creates and returns a new logger which inherits all settings from
 // DefaultLogger.
-func New(defaultKeyvals ...interface{}) *Logger {
+func New(defaultKeyvals ...any) *Logger {
 	return DefaultLogger.New(defaultKeyvals...)
 }
 
 // New creates and returns a new logger which inherits all settings from l.
-func (l *Logger) New(defaultKeyvals ...interface{}) *Logger {
+func (l *Logger) New(defaultKeyvals ...any) *Logger {
 	if l == nil {
 		panic("New called on nil *Logger")
 	}
@@ -197,7 +197,7 @@ func (l *Logger) New(defaultKeyvals ...interface{}) *Logger {
 	return (&Logger{
 		parent:         l,
 		callDepth:      0,
-		defaultKeyvals: make(map[string]interface{}, sizeHint),
+		defaultKeyvals: make(map[string]any, sizeHint),
 		prefixKeys:     make([]string, 0, sizeHint),
 		suffixKeys:     make([]string, 0, sizeHint),
 		keysFormat:     make(map[string]string, sizeHint),
@@ -218,8 +218,8 @@ func (l *Logger) SetPrinter(printer Printer) *Logger {
 
 // SetOutput is a convenience wrapper for SetPrinter.
 func (l *Logger) SetOutput(w io.Writer) *Logger {
-	return l.SetPrinter(PrinterFunc(func(v ...interface{}) {
-		fmt.Fprint(w, append(v, "\n")...)
+	return l.SetPrinter(PrinterFunc(func(v ...any) {
+		_, _ = fmt.Fprint(w, append(v, "\n")...)
 	}))
 }
 
@@ -310,7 +310,7 @@ func (l *Logger) AddCallDepth(depth int) *Logger {
 // This is very useful if unwanted key was inherited from parent logger.
 //
 // It doesn't creates a new logger, it returns l just for convenience.
-func (l *Logger) SetDefaultKeyvals(keyvals ...interface{}) *Logger {
+func (l *Logger) SetDefaultKeyvals(keyvals ...any) *Logger {
 	if len(keyvals)%2 != 0 {
 		l.New().AddCallDepth(getPackageDepth()).PrintErr("odd keyvals")
 		keyvals = append(keyvals, MissingValue)
@@ -450,7 +450,7 @@ func (l *Logger) IsDebug() bool {
 //
 //	defer log.Recover(nil)
 //	func PanicToErr() (err error) { defer log.Recover(&err); ... }
-func (l *Logger) Recover(err *error, keyvals ...interface{}) { //nolint:gocritic // By design.
+func (l *Logger) Recover(err *error, keyvals ...any) { //nolint:gocritic // By design.
 	e := recover() //nolint:revive // By design.
 	if e == nil {
 		return
@@ -480,7 +480,7 @@ func (l *Logger) Recover(err *error, keyvals ...interface{}) { //nolint:gocritic
 // keyvals with level ERR if returned error is not nil.
 //
 //	defer log.ErrIfFail(file.Close)
-func (l *Logger) ErrIfFail(f func() error, keyvals ...interface{}) {
+func (l *Logger) ErrIfFail(f func() error, keyvals ...any) {
 	if err := f(); err != nil {
 		l.log(ERR, err, keyvals...)
 	}
@@ -490,7 +490,7 @@ func (l *Logger) ErrIfFail(f func() error, keyvals ...interface{}) {
 // keyvals with level WRN if returned error is not nil.
 //
 //	defer log.WarnIfFail(file.Close)
-func (l *Logger) WarnIfFail(f func() error, keyvals ...interface{}) {
+func (l *Logger) WarnIfFail(f func() error, keyvals ...any) {
 	if err := f(); err != nil {
 		l.log(WRN, err, keyvals...)
 	}
@@ -500,7 +500,7 @@ func (l *Logger) WarnIfFail(f func() error, keyvals ...interface{}) {
 // keyvals with level INF if returned error is not nil.
 //
 //	defer log.InfoIfFail(file.Close)
-func (l *Logger) InfoIfFail(f func() error, keyvals ...interface{}) {
+func (l *Logger) InfoIfFail(f func() error, keyvals ...any) {
 	if err := f(); err != nil {
 		l.log(INF, err, keyvals...)
 	}
@@ -510,7 +510,7 @@ func (l *Logger) InfoIfFail(f func() error, keyvals ...interface{}) {
 // keyvals with level DBG if returned error is not nil.
 //
 //	defer log.DebugIfFail(file.Close)
-func (l *Logger) DebugIfFail(f func() error, keyvals ...interface{}) {
+func (l *Logger) DebugIfFail(f func() error, keyvals ...any) {
 	if err := f(); err != nil {
 		l.log(DBG, err, keyvals...)
 	}
@@ -519,7 +519,7 @@ func (l *Logger) DebugIfFail(f func() error, keyvals ...interface{}) {
 // PrintErr log defaultKeyvals, msg and keyvals with level ERR.
 //
 // In most cases you should use Err instead, to both log and handle error.
-func (l *Logger) PrintErr(msg interface{}, keyvals ...interface{}) {
+func (l *Logger) PrintErr(msg any, keyvals ...any) {
 	l.log(ERR, msg, keyvals...)
 }
 
@@ -528,68 +528,70 @@ func (l *Logger) PrintErr(msg interface{}, keyvals ...interface{}) {
 //
 //	return log.Err("message to log", "error to log and return", err)
 //	return log.Err(errors.New("error to log and return"), "error to log", err)
-func (l *Logger) Err(msg interface{}, keyvals ...interface{}) error {
+func (l *Logger) Err(msg any, keyvals ...any) error {
 	l.log(ERR, msg, keyvals...)
 	return getErr(msg, keyvals...)
 }
 
 // Warn log defaultKeyvals, msg and keyvals with level WRN.
-func (l *Logger) Warn(msg interface{}, keyvals ...interface{}) {
+func (l *Logger) Warn(msg any, keyvals ...any) {
 	l.log(WRN, msg, keyvals...)
 }
 
 // Info log defaultKeyvals, msg and keyvals with level INF.
-func (l *Logger) Info(msg interface{}, keyvals ...interface{}) {
+func (l *Logger) Info(msg any, keyvals ...any) {
 	l.log(INF, msg, keyvals...)
 }
 
 // Debug log defaultKeyvals, msg and keyvals with level DBG.
-func (l *Logger) Debug(msg interface{}, keyvals ...interface{}) {
+//
+//nolint:godox // Allow "Debug".
+func (l *Logger) Debug(msg any, keyvals ...any) {
 	l.log(DBG, msg, keyvals...)
 }
 
 // Print works like log.Print. Use level INF.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Print(v ...interface{}) {
+func (l *Logger) Print(v ...any) {
 	l.log(INF, fmt.Sprint(v...))
 }
 
 // Printf works like log.Printf. Use level INF.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Printf(format string, v ...interface{}) {
+func (l *Logger) Printf(format string, v ...any) {
 	l.log(INF, fmt.Sprintf(format, v...))
 }
 
 // Println works like log.Println. Use level INF.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Println(v ...interface{}) {
+func (l *Logger) Println(v ...any) {
 	l.log(INF, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 }
 
 // Fatal works like log.Fatal. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Fatal(v ...interface{}) {
+func (l *Logger) Fatal(v ...any) {
 	l.log(ERR, fmt.Sprint(v...))
 	os.Exit(1) //nolint:revive // By design.
 }
 
 // Fatalf works like log.Fatalf. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Fatalf(format string, v ...interface{}) {
+func (l *Logger) Fatalf(format string, v ...any) {
 	l.log(ERR, fmt.Sprintf(format, v...))
 	os.Exit(1) //nolint:revive // By design.
 }
 
 // Fatalln works like log.Fatalln. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Fatalln(v ...interface{}) {
+func (l *Logger) Fatalln(v ...any) {
 	l.log(ERR, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 	os.Exit(1) //nolint:revive // By design.
 }
 
 // Panic works like log.Panic. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Panic(v ...interface{}) {
+func (l *Logger) Panic(v ...any) {
 	s := fmt.Sprint(v...)
 	l.log(ERR, s)
 	panic(s)
@@ -597,7 +599,7 @@ func (l *Logger) Panic(v ...interface{}) {
 
 // Panicf works like log.Panicf. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Panicf(format string, v ...interface{}) {
+func (l *Logger) Panicf(format string, v ...any) {
 	s := fmt.Sprintf(format, v...)
 	l.log(ERR, s)
 	panic(s)
@@ -605,7 +607,7 @@ func (l *Logger) Panicf(format string, v ...interface{}) {
 
 // Panicln works like log.Panicln. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
-func (l *Logger) Panicln(v ...interface{}) {
+func (l *Logger) Panicln(v ...any) {
 	s := strings.TrimSuffix(fmt.Sprintln(v...), "\n")
 	l.log(ERR, s)
 	panic(s)
@@ -613,7 +615,7 @@ func (l *Logger) Panicln(v ...interface{}) {
 
 var now = time.Now //nolint:gochecknoglobals // For tests.
 
-func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { //nolint:gocyclo,gocognit,funlen // TODO Simplify.
+func (l *Logger) log(level logLevel, msg any, keyvals ...any) { //nolint:gocyclo,gocognit,funlen // TODO Simplify.
 	l.RLock()
 	defer l.RUnlock()
 	if l.parent != nil {
@@ -642,9 +644,9 @@ func (l *Logger) log(level logLevel, msg interface{}, keyvals ...interface{}) { 
 	vals := make(kvs, len(l.prefixKeys)+len(keyvals)/2+len(l.suffixKeys)+extraKeys)
 	prefixFormat := make([]string, 0, len(l.prefixKeys))
 	suffixFormat := make([]string, 0, len(l.suffixKeys))
-	middleFormat := make([]string, 0, len(keyvals)/2) //nolint:gomnd // Half.
-	middleKeys := make([]string, 0, len(keyvals)/2)   //nolint:gomnd // Half.
-	values := make([]interface{}, 0, len(vals))
+	middleFormat := make([]string, 0, len(keyvals)/2) //nolint:mnd // Half.
+	middleKeys := make([]string, 0, len(keyvals)/2)   //nolint:mnd // Half.
+	values := make([]any, 0, len(vals))
 	surroundKeys := make(map[string]bool, len(l.prefixKeys)+len(l.suffixKeys))
 
 	// Gather keys for output:
@@ -860,7 +862,7 @@ func getPackageDepth() int {
 }
 
 // getErr returns first arg of type error or msg.
-func getErr(msg interface{}, keyvals ...interface{}) error {
+func getErr(msg any, keyvals ...any) error {
 	if err, ok := msg.(error); ok {
 		return err
 	}

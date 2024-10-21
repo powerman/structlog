@@ -2,7 +2,7 @@ package structlog
 
 type keyvalsError struct {
 	err     error
-	keyvals []interface{}
+	keyvals []any
 }
 
 // Error implements error interface.
@@ -20,7 +20,7 @@ func (err *keyvalsError) Unwrap() error {
 	return err.err
 }
 
-func unwrap(err error) (keyvals []interface{}) {
+func unwrap(err error) (keyvals []any) {
 	for err != nil {
 		switch errWith := err.(type) { //nolint:errorlint // Needs to also support Cause.
 		case *keyvalsError:
@@ -41,7 +41,7 @@ func unwrap(err error) (keyvals []interface{}) {
 // logged later these keyvals will be included in output.
 //
 // If called with nil error it'll return nil.
-func (l *Logger) WrapErr(err error, keyvals ...interface{}) error {
+func (l *Logger) WrapErr(err error, keyvals ...any) error {
 	if err == nil {
 		return nil
 	}
