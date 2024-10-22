@@ -1,5 +1,7 @@
 //go:build generate
 
+// NOTE: Prefix 0- in this file's name ensures that `go generate ./...` processes it first.
+
 //go:generate mkdir -p .buildcache/bin
 //go:generate -command GOINSTALL env "GOBIN=$PWD/.buildcache/bin" go install
 //go:generate -command INSTALL-SHELLCHECK sh -c ".buildcache/bin/shellcheck --version 2>/dev/null | grep -wq \"$DOLLAR{DOLLAR}{1}\" || curl -sSfL https://github.com/koalaman/shellcheck/releases/download/v\"$DOLLAR{DOLLAR}{1}\"/shellcheck-v\"$DOLLAR{DOLLAR}{1}\".\"$(uname)\".x86_64.tar.xz | tar xJf - -C .buildcache/bin --strip-components=1 shellcheck-v\"$DOLLAR{DOLLAR}{1}\"/shellcheck" -sh
