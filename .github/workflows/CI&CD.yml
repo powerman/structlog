@@ -38,9 +38,9 @@ jobs:
             ~/.cache/go-build
             ~/.cache/golangci-lint
             .buildcache
-          key: v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('tools.go') }}-${{ hashFiles('go.sum') }}
+          key: v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('0-tools.go') }}-${{ hashFiles('go.sum') }}
           restore-keys: |
-            v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('tools.go') }}-
+            v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-${{ hashFiles('0-tools.go') }}-
             v1-go-with-tools-${{ runner.os }}-${{ matrix.go }}-
 
       - run: scripts/test
