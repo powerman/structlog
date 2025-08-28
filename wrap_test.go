@@ -41,14 +41,16 @@ func ExampleLogger_WrapErr() {
 		return log.WrapErr(io.EOF, "details", "about error")
 	}
 	middleLevelFunc := func(action string) error {
-		if err := lowLevelFunc(); err != nil {
+		err := lowLevelFunc()
+		if err != nil {
 			err = fmt.Errorf("lowLevelFunc: %w", err)
 			return log.WrapErr(err, "action", action)
 		}
 		return nil
 	}
 	topLevelFunc := func() {
-		if err := middleLevelFunc("doit"); err != nil {
+		err := middleLevelFunc("doit")
+		if err != nil {
 			log.Warn("log only at top level", "err", err)
 		}
 	}

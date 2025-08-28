@@ -14,12 +14,12 @@ import (
 func TestGetErr(tt *testing.T) {
 	t := check.T(tt)
 	log := structlog.New().SetOutput(io.Discard)
-	myerr := errors.New("my error") //nolint:goerr113 // By design.
+	myerr := errors.New("my error") //nolint:err113 // By design.
 	t.Err(log.Err(myerr), myerr)
 	t.Err(log.Err(myerr, "err", io.EOF), myerr)
 	t.Err(log.Err("fail", "err", io.EOF), io.EOF)
 	t.Err(log.Err("fail", "a", 1, "myerr", myerr, "b", 2), myerr)
-	t.Err(log.Err("fail", "a", 1, "b", 2), errors.New("fail")) //nolint:goerr113 // By design.
+	t.Err(log.Err("fail", "a", 1, "b", 2), errors.New("fail")) //nolint:err113 // By design.
 	t.Err(log.Err("fail", io.EOF, myerr), io.EOF)
 	t.Err(log.Err("fail", io.EOF), io.EOF)
 }

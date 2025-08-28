@@ -1,10 +1,16 @@
 # structlog
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/powerman/structlog.svg)](https://pkg.go.dev/github.com/powerman/structlog)
-[![CI/CD](https://github.com/powerman/structlog/workflows/CI/CD/badge.svg?event=push)](https://github.com/powerman/structlog/actions?query=workflow%3ACI%2FCD)
-[![Coverage Status](https://coveralls.io/repos/github/powerman/structlog/badge.svg?branch=master)](https://coveralls.io/github/powerman/structlog?branch=master)
+[![License MIT](https://img.shields.io/badge/license-MIT-royalblue.svg)](LICENSE)
+[![Go version](https://img.shields.io/github/go-mod/go-version/powerman/structlog?color=blue)](https://go.dev/)
+[![Test](https://img.shields.io/github/actions/workflow/status/powerman/structlog/test.yml?label=test)](https://github.com/powerman/structlog/actions/workflows/test.yml)
+[![Coverage Status](https://raw.githubusercontent.com/powerman/structlog/gh-badges/coverage.svg)](https://github.com/powerman/structlog/actions/workflows/test.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/powerman/structlog)](https://goreportcard.com/report/github.com/powerman/structlog)
-[![Release](https://img.shields.io/github/v/release/powerman/structlog)](https://github.com/powerman/structlog/releases/latest)
+[![Release](https://img.shields.io/github/v/release/powerman/structlog?color=blue)](https://github.com/powerman/structlog/releases/latest)
+[![Go Reference](https://pkg.go.dev/badge/github.com/powerman/structlog.svg)](https://pkg.go.dev/github.com/powerman/structlog)
+
+![Linux | amd64 arm64 armv7 ppc64le s390x riscv64](https://img.shields.io/badge/Linux-amd64%20arm64%20armv7%20ppc64le%20s390x%20riscv64-royalblue)
+![macOS | amd64 arm64](https://img.shields.io/badge/macOS-amd64%20arm64-royalblue)
+![Windows | amd64 arm64](https://img.shields.io/badge/Windows-amd64%20arm64-royalblue)
 
 ## Features
 
@@ -19,31 +25,31 @@
 - service key for high-level source name (like package or subsystem),
   caller's package name by default
 - when creating new logger instance:
-    - inherit default logger settings (configured in main())
-    - add new default key/values
-    - disable inherited default keys
+  - inherit default logger settings (configured in main())
+  - add new default key/values
+  - disable inherited default keys
 - warn about imbalanced key/value pairs
 - first parameter to log functions should be value for "message" service key
 - able to output stack trace
 - level-guards like IsDebug()
 - output complex struct as key values (using "%v" like formatting)
 - Error returns message as error (auto-convert from string, if needed)
-    - actually it returns first `.(error)` arg if any or message otherwise
+  - actually it returns first `.(error)` arg if any or message otherwise
 - convenient helpers IfFail and Recover for use with defer
 - output can be redirected/intercepted
 - when output as JSON:
-    - add service field time by default
+  - add service field time by default
 - when output as Text:
-    - do not add service field time by default
-    - order of keys in output is fixed, same as order of log function
-      parameters
-    - it is possible to set minimal width for some keys (both user and
-      service ones)
-    - it is possible to setup order for service keys, including this keys
-      should be output before and after user keys
-    - it is possible to choose output style for some keys: "key: ",
-      "key=", do not output key name
-    - it is possible to choose how to escape values by default and for
-      selected keys: no escaping, use \`\`, use ""
-    - do not support colored output - this can be added by external tools
-      like grc and we anyway won't have colors in log files
+  - do not add service field time by default
+  - order of keys in output is fixed, same as order of log function
+    parameters
+  - it is possible to set minimal width for some keys (both user and
+    service ones)
+  - it is possible to setup order for service keys, including this keys
+    should be output before and after user keys
+  - it is possible to choose output style for some keys: "key: ",
+    "key=", do not output key name
+  - it is possible to choose how to escape values by default and for
+    selected keys: no escaping, use \`\`, use ""
+  - do not support colored output - this can be added by external tools
+    like grc and we anyway won't have colors in log files

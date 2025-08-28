@@ -116,6 +116,7 @@ func (l logLevel) MarshalJSON() ([]byte, error) {
 
 // Logger implements structured logger.
 type Logger struct {
+	mu             sync.RWMutex
 	parent         *Logger
 	printer        Printer
 	format         *logFormat
@@ -128,7 +129,6 @@ type Logger struct {
 	prefixKeys     []string
 	suffixKeys     []string
 	keysFormat     map[string]string
-	sync.RWMutex
 }
 
 // DefaultLogger provides sane defaults inherited by new logger
@@ -210,8 +210,8 @@ func (l *Logger) New(defaultKeyvals ...any) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetPrinter(printer Printer) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.printer = printer
 	return l
 }
@@ -228,8 +228,8 @@ func (l *Logger) SetOutput(w io.Writer) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetLogFormat(format logFormat) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.format = &format
 	return l
 }
@@ -239,8 +239,8 @@ func (l *Logger) SetLogFormat(format logFormat) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetLogLevel(level logLevel) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.level = &level
 	return l
 }
@@ -253,8 +253,8 @@ func (l *Logger) SetLogLevel(level logLevel) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetKeyValFormat(format string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.keyValFormat = &format
 	return l
 }
@@ -264,8 +264,8 @@ func (l *Logger) SetKeyValFormat(format string) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetTimeFormat(format string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.timeFormat = &format
 	return l
 }
@@ -275,8 +275,8 @@ func (l *Logger) SetTimeFormat(format string) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetTimeValFormat(format string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.timeValFormat = &format
 	return l
 }
@@ -288,8 +288,8 @@ func (l *Logger) SetTimeValFormat(format string) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) AddCallDepth(depth int) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	l.callDepth += depth
 	return l
 }
@@ -321,9 +321,9 @@ func (l *Logger) SetDefaultKeyvals(keyvals ...any) *Logger {
 			l.New().AddCallDepth(getPackageDepth()).SetKeyValFormat(" %#[2]v").PrintErr("key is not string", "key", keyvals[i])
 			k = fmt.Sprint(keyvals[i])
 		}
-		l.Lock()
+		l.mu.Lock()
 		l.defaultKeyvals[k] = keyvals[i+1]
-		l.Unlock()
+		l.mu.Unlock()
 	}
 	return l
 }
@@ -337,8 +337,8 @@ func (l *Logger) SetDefaultKeyvals(keyvals ...any) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetPrefixKeys(keys ...string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if l.parent == nil {
 		panic("too late to reconfigure prefixKeys")
 	}
@@ -354,8 +354,8 @@ func (l *Logger) SetPrefixKeys(keys ...string) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) AppendPrefixKeys(keys ...string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if l.parent == nil {
 		panic("too late to reconfigure prefixKeys")
 	}
@@ -370,8 +370,8 @@ func (l *Logger) AppendPrefixKeys(keys ...string) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) PrependSuffixKeys(keys ...string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if l.parent == nil {
 		panic("too late to reconfigure suffixKeys")
 	}
@@ -388,8 +388,8 @@ func (l *Logger) PrependSuffixKeys(keys ...string) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetSuffixKeys(keys ...string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	if l.parent == nil {
 		panic("too late to reconfigure suffixKeys")
 	}
@@ -411,8 +411,8 @@ func (l *Logger) SetSuffixKeys(keys ...string) *Logger {
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetKeysFormat(keysFormat map[string]string) *Logger {
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	for k, v := range keysFormat {
 		l.keysFormat[k] = v
 	}
@@ -421,24 +421,24 @@ func (l *Logger) SetKeysFormat(keysFormat map[string]string) *Logger {
 
 // IsInfo returns true if l's log level DBG or INF.
 func (l *Logger) IsInfo() bool {
-	l.RLock()
-	defer l.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	if l.parent != nil {
-		l.RUnlock()
+		l.mu.RUnlock()
 		l.mergeParent()
-		l.RLock()
+		l.mu.RLock()
 	}
 	return *l.level <= INF
 }
 
 // IsDebug returns true if l's log level DBG.
 func (l *Logger) IsDebug() bool {
-	l.RLock()
-	defer l.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	if l.parent != nil {
-		l.RUnlock()
+		l.mu.RUnlock()
 		l.mergeParent()
-		l.RLock()
+		l.mu.RLock()
 	}
 	return *l.level <= DBG
 }
@@ -459,7 +459,7 @@ func (l *Logger) Recover(err *error, keyvals ...any) { //nolint:gocritic // By d
 	if err != nil {
 		var ok bool
 		if *err, ok = e.(error); !ok {
-			*err = fmt.Errorf("%v", e) //nolint:goerr113 // By design.
+			*err = fmt.Errorf("%v", e) //nolint:err113 // By design.
 		}
 	}
 
@@ -481,7 +481,8 @@ func (l *Logger) Recover(err *error, keyvals ...any) { //nolint:gocritic // By d
 //
 //	defer log.ErrIfFail(file.Close)
 func (l *Logger) ErrIfFail(f func() error, keyvals ...any) {
-	if err := f(); err != nil {
+	err := f()
+	if err != nil {
 		l.log(ERR, err, keyvals...)
 	}
 }
@@ -491,7 +492,8 @@ func (l *Logger) ErrIfFail(f func() error, keyvals ...any) {
 //
 //	defer log.WarnIfFail(file.Close)
 func (l *Logger) WarnIfFail(f func() error, keyvals ...any) {
-	if err := f(); err != nil {
+	err := f()
+	if err != nil {
 		l.log(WRN, err, keyvals...)
 	}
 }
@@ -501,7 +503,8 @@ func (l *Logger) WarnIfFail(f func() error, keyvals ...any) {
 //
 //	defer log.InfoIfFail(file.Close)
 func (l *Logger) InfoIfFail(f func() error, keyvals ...any) {
-	if err := f(); err != nil {
+	err := f()
+	if err != nil {
 		l.log(INF, err, keyvals...)
 	}
 }
@@ -511,7 +514,8 @@ func (l *Logger) InfoIfFail(f func() error, keyvals ...any) {
 //
 //	defer log.DebugIfFail(file.Close)
 func (l *Logger) DebugIfFail(f func() error, keyvals ...any) {
-	if err := f(); err != nil {
+	err := f()
+	if err != nil {
 		l.log(DBG, err, keyvals...)
 	}
 }
@@ -616,12 +620,12 @@ func (l *Logger) Panicln(v ...any) {
 var now = time.Now //nolint:gochecknoglobals // For tests.
 
 func (l *Logger) log(level logLevel, msg any, keyvals ...any) { //nolint:gocyclo,gocognit,funlen // TODO Simplify.
-	l.RLock()
-	defer l.RUnlock()
+	l.mu.RLock()
+	defer l.mu.RUnlock()
 	if l.parent != nil {
-		l.RUnlock()
+		l.mu.RUnlock()
 		l.mergeParent()
-		l.RLock()
+		l.mu.RLock()
 	}
 
 	if *l.level > level {
@@ -784,22 +788,22 @@ func (l *Logger) log(level logLevel, msg any, keyvals ...any) { //nolint:gocyclo
 //	keysFormat:     use parent only by default (set to DefaultKeyValFormat to drop parent's value)
 func (l *Logger) mergeParent() {
 	// Handle recursive calls, like in case "key is not string".
-	l.RLock()
+	l.mu.RLock()
 	if l.parent == nil {
-		l.RUnlock()
+		l.mu.RUnlock()
 		return
 	}
-	l.RUnlock()
+	l.mu.RUnlock()
 
-	l.Lock()
-	defer l.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	p := l.parent
 	if p == nil {
 		return
 	}
 	p.mergeParent()
-	p.RLock()
-	defer p.RUnlock()
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 
 	if l.printer == nil {
 		l.printer = p.printer
@@ -871,5 +875,5 @@ func getErr(msg any, keyvals ...any) error {
 			return err
 		}
 	}
-	return fmt.Errorf("%s", msg) //nolint:goerr113 // By design.
+	return fmt.Errorf("%s", msg) //nolint:err113 // By design.
 }
