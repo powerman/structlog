@@ -2,7 +2,7 @@ package structlog_test
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"strconv"
 )
@@ -10,7 +10,7 @@ import (
 var (
 	pid            = strconv.Itoa(os.Getpid())
 	wd, _          = os.Getwd()
-	unit           = path.Base(wd) // Differ on CI.
+	unit           = filepath.Base(wd) // Differ on CI.
 	osNotExistsMsg = func() string {
 		if runtime.GOOS == "windows" {
 			return "The system cannot find the path specified."
