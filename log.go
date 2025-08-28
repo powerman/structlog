@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -131,11 +132,18 @@ type Logger struct {
 	keysFormat     map[string]string
 }
 
+// getAppName returns the application name without path and .exe extension.
+func getAppName() string {
+	appName := filepath.Base(os.Args[0])
+	// Remove .exe extension on Windows.
+	return strings.TrimSuffix(appName, ".exe")
+}
+
 // DefaultLogger provides sane defaults inherited by new logger
 // objects created with New(). Feel free to change it settings
 // when your app start.
 var DefaultLogger = NewZeroLogger( //nolint:gochecknoglobals // By design.
-	KeyApp, path.Base(os.Args[0]),
+	KeyApp, getAppName(),
 	KeyPID, os.Getpid(),
 ).SetPrefixKeys(
 	KeyTime, KeyApp, KeyPID, KeyLevel, KeyUnit,
@@ -714,8 +722,8 @@ func (l *Logger) log(level logLevel, msg any, keyvals ...any) { //nolint:gocyclo
 	_, okFunc := vals[KeyFunc]
 	_, okSource := vals[KeySource]
 	if okUnit && unit == Auto || okSource || okFunc { //nolint:nestif // No idea how to improve.
-		if pc, filepath, line, ok := runtime.Caller(l.callDepth); ok {
-			dir, file := path.Split(filepath)
+		if pc, filePath, line, ok := runtime.Caller(l.callDepth); ok {
+			dir, file := path.Split(filePath)
 			if okUnit && unit == Auto {
 				vals[KeyUnit] = path.Base(dir)
 			}
