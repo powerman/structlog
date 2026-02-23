@@ -35,12 +35,11 @@ func TestRace1(_ *testing.T) {
 	log1 := log.New("key", "value")
 	log2 := log.New()
 	var wg sync.WaitGroup
-	wg.Add(4)
 	start := make(chan struct{})
-	go func() { <-start; log.Err("failed"); wg.Done() }()
-	go func() { <-start; log.Warn("hmm"); wg.Done() }()
-	go func() { <-start; log1.Info("done"); wg.Done() }()
-	go func() { <-start; log2.Debug("dump"); wg.Done() }()
+	wg.Go(func() { <-start; log.Err("failed") })
+	wg.Go(func() { <-start; log.Warn("hmm") })
+	wg.Go(func() { <-start; log1.Info("done") })
+	wg.Go(func() { <-start; log2.Debug("dump") })
 	close(start)
 	wg.Wait()
 }
@@ -49,12 +48,11 @@ func TestRace1(_ *testing.T) {
 func TestRace2(_ *testing.T) {
 	log0 := structlog.New().SetOutput(io.Discard)
 	var wg sync.WaitGroup
-	wg.Add(4)
 	start := make(chan struct{})
-	go func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 1); log.Err("failed"); wg.Done() }()
-	go func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 2); log.Warn("hmm"); wg.Done() }()
-	go func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 3); log.Info("done"); wg.Done() }()
-	go func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 4); log.Debug("dump"); wg.Done() }()
+	wg.Go(func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 1); log.Err("failed") })
+	wg.Go(func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 2); log.Warn("hmm") })
+	wg.Go(func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 3); log.Info("done") })
+	wg.Go(func() { <-start; log := log0.New(); log.SetDefaultKeyvals("key", 4); log.Debug("dump") })
 	close(start)
 	wg.Wait()
 }
