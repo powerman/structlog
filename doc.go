@@ -31,7 +31,7 @@
 //   - Re-ordering output values by choosing which keys should be output
 //     as prefix (before log message) and as suffix (after other keys).
 //   - Defining internal order of prefix and suffix keys.
-//   - Defining key/value output style using fmt.Sprintf 'verbs', including
+//   - Defining key/value output style using [fmt.Sprintf] 'verbs', including
 //     ability to output only value, without key name.
 //   - Choosing which ones of pre-defined key/values to include in output:
 //   - caller's package
@@ -41,8 +41,8 @@
 //
 // Supported log levels: Err, Warn, Info and Debug.
 //
-// On import it calls stdlib's log.SetFlags(0) and by default will use
-// stdlib's log.Print() to output log lines - this is to make sure
+// On import it calls stdlib's [log.SetFlags](0) and by default will use
+// stdlib's [log.Print] to output log lines - this is to make sure
 // structlog's output goes at same place as logging from other packages
 // (which often use stdlib's log).
 //
@@ -61,7 +61,7 @@
 //
 // Then you can do some extra setup on your logger (usually - just add
 // some default key/value pair which should be output by each log call),
-// and call log.New() method to get new logger which will inherit this
+// and call [log.New] method to get new logger which will inherit this
 // extra setup.
 //
 // E.g. imagine HTTP middlewares: first will detect IP of connected client
@@ -79,7 +79,7 @@
 //	New (method)    - will inherit from it's object
 //	NewZeroLogger   - new empty logger (usually you won't need this)
 //
-// ★ Passing logger inside context.Context:
+// ★ Passing logger inside [context.Context]:
 //
 //	NewContext
 //	FromContext
@@ -128,7 +128,7 @@
 //	ParseLevel
 //	SetLogLevel
 //
-// ★ Passing this logger to 3rd-party packages which expects interface of stdlib's log.Logger:
+// ★ Passing this logger to 3rd-party packages which expects interface of stdlib's [log.Logger]:
 //
 //	Fatal
 //	Fatalf

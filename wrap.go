@@ -15,7 +15,7 @@ func (err *keyvalsError) Cause() error {
 	return err.err
 }
 
-// Unwrap implements interface used by errors.Unwrap.
+// Unwrap implements interface used by [errors.Unwrap].
 func (err *keyvalsError) Unwrap() error {
 	return err.err
 }

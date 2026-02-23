@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -76,7 +77,7 @@ type Printer interface {
 // The PrinterFunc type is an adapter to allow the use of ordinary functions as Printer.
 type PrinterFunc func(v ...any)
 
-// Print outputs v plus \n. Arguments are handled in the manner of fmt.Print.
+// Print outputs v plus \n. Arguments are handled in the manner of [fmt.Print].
 func (f PrinterFunc) Print(v ...any) { f(v...) }
 
 // ParseLevel convert levelName from flag or config file into logLevel.
@@ -214,7 +215,7 @@ func (l *Logger) New(defaultKeyvals ...any) *Logger {
 
 // SetPrinter changes log output destination (default value is
 // PrinterFunc(log.Print), i.e. use standard logger, which will be
-// configured using log.SetFlags(0) while importing this package).
+// configured using [log.SetFlags](0) while importing this package).
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetPrinter(printer Printer) *Logger {
@@ -267,7 +268,7 @@ func (l *Logger) SetKeyValFormat(format string) *Logger {
 	return l
 }
 
-// SetTimeFormat changes format for time.Time.Format used when output log
+// SetTimeFormat changes format for [time.Time.Format] used when output log
 // time (default value is DefaultTimeFormat).
 //
 // It doesn't creates a new logger, it returns l just for convenience.
@@ -278,8 +279,8 @@ func (l *Logger) SetTimeFormat(format string) *Logger {
 	return l
 }
 
-// SetTimeValFormat changes format for time.Time.Format used when output
-// time.Time values (default value is DefaultTimeValFormat).
+// SetTimeValFormat changes format for [time.Time.Format] used when output
+// [time.Time] values (default value is DefaultTimeValFormat).
 //
 // It doesn't creates a new logger, it returns l just for convenience.
 func (l *Logger) SetTimeValFormat(format string) *Logger {
@@ -410,7 +411,7 @@ func (l *Logger) SetSuffixKeys(keys ...string) *Logger {
 // If key doesn't have custom format string then it will use format set
 // using SetKeyValFormat (default value is DefaultKeyValFormat).
 //
-// These format strings will be used as fmt.Sprintf(format,key,val),
+// These format strings will be used as [fmt.Sprintf](format,key,val),
 // so you can refer to key name and it value as %[1] and %[2] - this is
 // very useful in case you wanna output only key value, without name.
 //
@@ -421,9 +422,7 @@ func (l *Logger) SetSuffixKeys(keys ...string) *Logger {
 func (l *Logger) SetKeysFormat(keysFormat map[string]string) *Logger {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	for k, v := range keysFormat {
-		l.keysFormat[k] = v
-	}
+	maps.Copy(l.keysFormat, keysFormat)
 	return l
 }
 
@@ -562,46 +561,46 @@ func (l *Logger) Debug(msg any, keyvals ...any) {
 	l.log(DBG, msg, keyvals...)
 }
 
-// Print works like log.Print. Use level INF.
+// Print works like [log.Print]. Use level INF.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Print(v ...any) {
 	l.log(INF, fmt.Sprint(v...))
 }
 
-// Printf works like log.Printf. Use level INF.
+// Printf works like [log.Printf]. Use level INF.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Printf(format string, v ...any) {
 	l.log(INF, fmt.Sprintf(format, v...))
 }
 
-// Println works like log.Println. Use level INF.
+// Println works like [log.Println]. Use level INF.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Println(v ...any) {
 	l.log(INF, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 }
 
-// Fatal works like log.Fatal. Use level ERR.
+// Fatal works like [log.Fatal]. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Fatal(v ...any) {
 	l.log(ERR, fmt.Sprint(v...))
 	os.Exit(1) //nolint:revive // By design.
 }
 
-// Fatalf works like log.Fatalf. Use level ERR.
+// Fatalf works like [log.Fatalf]. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Fatalf(format string, v ...any) {
 	l.log(ERR, fmt.Sprintf(format, v...))
 	os.Exit(1) //nolint:revive // By design.
 }
 
-// Fatalln works like log.Fatalln. Use level ERR.
+// Fatalln works like [log.Fatalln]. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Fatalln(v ...any) {
 	l.log(ERR, strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 	os.Exit(1) //nolint:revive // By design.
 }
 
-// Panic works like log.Panic. Use level ERR.
+// Panic works like [log.Panic]. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Panic(v ...any) {
 	s := fmt.Sprint(v...)
@@ -609,7 +608,7 @@ func (l *Logger) Panic(v ...any) {
 	panic(s)
 }
 
-// Panicf works like log.Panicf. Use level ERR.
+// Panicf works like [log.Panicf]. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Panicf(format string, v ...any) {
 	s := fmt.Sprintf(format, v...)
@@ -617,7 +616,7 @@ func (l *Logger) Panicf(format string, v ...any) {
 	panic(s)
 }
 
-// Panicln works like log.Panicln. Use level ERR.
+// Panicln works like [log.Panicln]. Use level ERR.
 // Also output defaultKeyvals for prefixKeys/suffixKeys.
 func (l *Logger) Panicln(v ...any) {
 	s := strings.TrimSuffix(fmt.Sprintln(v...), "\n")
