@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-07-12
+
+### 📦️ Dependencies
+
+- **(deps)** Upgrade github.com/powerman/check to v1.13.0 by @powerman in [9cd760f]
+
+[0.9.0]: https://github.com/powerman/structlog/compare/v0.8.1..v0.9.0
+[9cd760f]: https://github.com/powerman/structlog/commit/9cd760fa31db37fe4ce27d52ca2a4a1174de68ad
+
 ## [0.8.1] - 2026-04-07
 
 ### 📦️ Dependencies
@@ -20,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **(deps)** Bump google.golang.org/protobuf from 1.27.0 to 1.33.0 by @dependabot[bot] in [#29]
 - **(deps)** Bump google.golang.org/grpc from 1.38.0 to 1.56.3 by @dependabot[bot] in [#31]
-- **(deps)** Bump github.com/prometheus/client_golang by @dependabot[bot] in [#33]
+- **(deps)** Bump `github.com/prometheus/client_golang` by @dependabot[bot] in [#33]
 - **(deps)** Bump gopkg.in/yaml.v3 by @dependabot[bot] in [#34]
 
 [0.8.0]: https://github.com/powerman/structlog/compare/v0.7.3..v0.8.0
