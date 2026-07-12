@@ -1,7 +1,6 @@
 package structlog_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/powerman/check"
@@ -10,11 +9,12 @@ import (
 )
 
 func TestContext(tt *testing.T) {
+	tt.Parallel()
 	t := check.Must(tt)
 	log1 := structlog.New()
 	log2 := structlog.New()
 	log3 := structlog.New()
-	ctx := context.Background()
+	ctx := t.Context()
 	t.NotNil(structlog.FromContext(ctx, nil))
 	t.HasType(structlog.FromContext(ctx, nil), log1)
 	t.Equal(structlog.FromContext(ctx, log1), log1)

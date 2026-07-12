@@ -13,6 +13,7 @@ import (
 )
 
 func TestWrapErr(tt *testing.T) {
+	tt.Parallel()
 	t := check.Must(tt)
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf)

@@ -26,6 +26,7 @@ func testPanicThinWrapper(log *structlog.Logger) {
 }
 
 func TestRecover(tt *testing.T) {
+	tt.Parallel()
 	t := check.Must(tt)
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf)
@@ -34,7 +35,7 @@ func TestRecover(tt *testing.T) {
 		panic("oops")
 	}
 	testPanicAnon(log)
-	t.Match(buf.String(), `@ structlog_test.TestRecover.func1\(caller_test.go:34\)`)
+	t.Match(buf.String(), `@ structlog_test.TestRecover.func1\(caller_test.go:35\)`)
 	buf.Reset()
 	testPanic(log)
 	t.Match(buf.String(), `@ structlog_test.testPanic\(caller_test.go:14\)`)

@@ -12,6 +12,7 @@ import (
 )
 
 func TestGetErr(tt *testing.T) {
+	tt.Parallel()
 	t := check.Must(tt)
 	log := structlog.New().SetOutput(io.Discard)
 	myerr := errors.New("my error") //nolint:err113 // By design.
@@ -25,12 +26,14 @@ func TestGetErr(tt *testing.T) {
 }
 
 func TestNewNil(tt *testing.T) {
+	tt.Parallel()
 	t := check.Must(tt)
 	t.Panic(func() { (*structlog.Logger)(nil).New() }, "New called on nil *Logger")
 }
 
 // Just in case, not sure is it makes any sense to test this.
-func TestRace1(_ *testing.T) {
+func TestRace1(tt *testing.T) {
+	tt.Parallel()
 	log := structlog.New().SetOutput(io.Discard).SetLogLevel(structlog.INF)
 	log1 := log.New("key", "value")
 	log2 := log.New()
@@ -45,7 +48,8 @@ func TestRace1(_ *testing.T) {
 }
 
 // Just in case, not sure is it makes any sense to test this.
-func TestRace2(_ *testing.T) {
+func TestRace2(tt *testing.T) {
+	tt.Parallel()
 	log0 := structlog.New().SetOutput(io.Discard)
 	var wg sync.WaitGroup
 	start := make(chan struct{})
