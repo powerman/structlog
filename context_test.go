@@ -10,7 +10,7 @@ import (
 )
 
 func TestContext(tt *testing.T) {
-	t := check.T(tt)
+	t := check.Must(tt)
 	log1 := structlog.New()
 	log2 := structlog.New()
 	log3 := structlog.New()

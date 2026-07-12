@@ -13,7 +13,7 @@ import (
 )
 
 func TestWrapErr(tt *testing.T) {
-	t := check.T(tt)
+	t := check.Must(tt)
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf)
 	err := log.WrapErr(io.EOF, "a", 10, "b", 20)

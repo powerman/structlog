@@ -13,8 +13,8 @@ import (
 )
 
 func TestJSONMarshalError(tt *testing.T) {
-	t := check.T(tt)
-	t.Parallel()
+	tt.Parallel()
+	t := check.Must(tt)
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf).SetLogFormat(structlog.JSON)
 	type V struct {

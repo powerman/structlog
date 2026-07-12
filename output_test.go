@@ -17,7 +17,7 @@ type bufPrinter struct{ bytes.Buffer }
 func (bp *bufPrinter) Print(v ...any) { fmt.Fprint(&bp.Buffer, append(v, "\n")...) }
 
 func TestDefaultPrinter(tt *testing.T) {
-	t := check.T(tt)
+	t := check.Must(tt)
 	defer stdlog.SetOutput(os.Stderr)
 	var buf bytes.Buffer
 	stdlog.SetOutput(&buf)
@@ -30,7 +30,7 @@ func TestDefaultPrinter(tt *testing.T) {
 }
 
 func TestPrinter(tt *testing.T) {
-	t := check.T(tt)
+	t := check.Must(tt)
 	var buf bufPrinter
 	log := structlog.New().SetPrinter(&buf)
 	log.Info("something happens", "k1", "v1", "k2", "v2")
@@ -41,7 +41,7 @@ func TestPrinter(tt *testing.T) {
 }
 
 func TestOutput(tt *testing.T) {
-	t := check.T(tt)
+	t := check.Must(tt)
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf)
 	log.Info("something happens", "k1", "v1", "k2", "v2")

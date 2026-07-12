@@ -26,7 +26,7 @@ func testPanicThinWrapper(log *structlog.Logger) {
 }
 
 func TestRecover(tt *testing.T) {
-	t := check.T(tt)
+	t := check.Must(tt)
 	var buf bytes.Buffer
 	log := structlog.New().SetOutput(&buf)
 	testPanicAnon := func(log *structlog.Logger) {
