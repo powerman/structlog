@@ -81,7 +81,7 @@ type PrinterFunc func(v ...any)
 func (f PrinterFunc) Print(v ...any) { f(v...) }
 
 // ParseLevel convert levelName from flag or config file into logLevel.
-func ParseLevel(levelName string) logLevel { //nolint:revive // Intentionally return unexported.
+func ParseLevel(levelName string) logLevel {
 	switch strings.ToLower(levelName) {
 	case "err", "error", "fatal", "crit", "critical", "alert", "emerg", "emergency":
 		return ERR
